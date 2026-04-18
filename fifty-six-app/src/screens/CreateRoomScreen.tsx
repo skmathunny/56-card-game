@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../constants/theme';
+import { SERVER_URL } from '../constants/game';
 import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
 import { useTransport } from '../services/transportContext';
@@ -44,8 +45,21 @@ export default function CreateRoomScreen() {
       const avatar = (await AsyncStorage.getItem('profile_avatar')) ?? '🦁';
       const userId = await AsyncStorage.getItem('user_id');
 
+      const createRes = await fetch(`${SERVER_URL}/rooms`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          playerCount,
+          startingTables:  tables,
+          bidTimerSeconds: bidTimer,
+          expiryHours:     4,
+        }),
+      });
+      if (!createRes.ok) throw new Error('Failed to create room');
+      const { code } = await createRes.json();
+
       const { room, yourPlayer } = await transport.joinRoom({
-        roomCode:    '',       // server creates a new room when code is empty
+        roomCode:    code,
         displayName: name,
         avatarUrl:   avatar,
         userId,
