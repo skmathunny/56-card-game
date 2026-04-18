@@ -31,6 +31,7 @@ export default function EndGameScreen() {
   const winner = gameState.winner;
   const loser  = winner === 'A' ? 'B' : 'A';
   const [showHistory, setShowHistory] = useState(false);
+  const lastRound = roundHistory.length > 0 ? roundHistory[roundHistory.length - 1] : null;
 
   const handleRematch = async () => {
     if (!roomId) return;
@@ -60,6 +61,20 @@ export default function EndGameScreen() {
             </>
           ) : (
             <Text style={styles.winnerText}>Game Over</Text>
+          )}
+
+          {lastRound && (
+            <View style={[styles.lastRoundBadge, { backgroundColor: lastRound.success ? Colors.success + '22' : Colors.error + '22', borderColor: lastRound.success ? Colors.success + '55' : Colors.error + '55' }]}>
+              <Text style={[styles.lastRoundTitle, { color: lastRound.success ? Colors.success : Colors.error }]}>
+                {lastRound.success ? '🏆' : '💔'} Team {lastRound.bidTeam} {lastRound.success ? 'Won' : 'Failed'} — Round {lastRound.roundNumber}
+              </Text>
+              <Text style={styles.lastRoundSub}>
+                Bid {lastRound.bidAmount}
+                {lastRound.doubled ? ' (Doubled)' : lastRound.redoubled ? ' (Redoubled)' : ''}
+                {'  '}
+                {lastRound.success ? `+${lastRound.tablesChange} tables` : `-${lastRound.tablesChange} tables`}
+              </Text>
+            </View>
           )}
         </View>
 
@@ -169,6 +184,19 @@ const styles = StyleSheet.create({
   trophyEmoji: { fontSize: 64 },
   winnerText:  { fontSize: FontSize.xxl, fontWeight: FontWeight.heavy, textAlign: 'center' },
   loserText:   { fontSize: FontSize.sm, color: Colors.textMuted },
+
+  lastRoundBadge: {
+    marginTop:       Spacing.sm,
+    borderWidth:     1,
+    borderRadius:    Radius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    alignItems:      'center',
+    gap:             2,
+    width:           '100%',
+  },
+  lastRoundTitle: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, textAlign: 'center' },
+  lastRoundSub:   { fontSize: FontSize.xs, color: Colors.textSecondary, textAlign: 'center' },
 
   card: {
     backgroundColor: Colors.bgCard,
