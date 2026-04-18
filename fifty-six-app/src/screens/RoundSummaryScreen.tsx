@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,7 +15,7 @@ const TEAM_COLORS = { A: Colors.teamA, B: Colors.teamB };
 
 export default function RoundSummaryScreen() {
   const navigation  = useNavigation<Nav>();
-  const { roundSummary, gameState, clearRoundSummary } = useGameStore();
+  const { roundSummary, roundHistory, gameState, clearRoundSummary } = useGameStore();
   const { setRoundSummaryVisible } = useUIStore();
 
   const handleContinue = () => {
@@ -35,9 +35,11 @@ export default function RoundSummaryScreen() {
 
   const bidTeamColor = TEAM_COLORS[roundSummary.bidTeam];
 
+  const previousRounds = roundHistory.slice(0, -1); // all except the round just played
+
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         {/* Result banner */}
         <View style={[styles.resultBanner, roundSummary.success ? styles.successBanner : styles.failBanner]}>
           <Text style={styles.resultEmoji}>{roundSummary.success ? '🏆' : '💔'}</Text>
@@ -101,8 +103,49 @@ export default function RoundSummaryScreen() {
           </View>
         </View>
 
+        {/* Game history */}
+        {previousRounds.length > 0 && (
+          <View style={styles.historyCard}>
+            <Text style={styles.historyTitle}>Game History</Text>
+
+            {/* Header row */}
+            <View style={styles.historyHeader}>
+              <Text style={[styles.historyHeaderCell, { width: 32 }]}>Rd</Text>
+              <Text style={[styles.historyHeaderCell, { flex: 1 }]}>Team</Text>
+              <Text style={[styles.historyHeaderCell, { width: 48, textAlign: 'center' }]}>Bid</Text>
+              <Text style={[styles.historyHeaderCell, { width: 60, textAlign: 'right' }]}>Result</Text>
+            </View>
+
+            {previousRounds.map((r) => {
+              const color = TEAM_COLORS[r.bidTeam];
+              const change = r.success ? `+${r.tablesChange}` : `-${r.tablesChange}`;
+              return (
+                <View key={r.roundNumber} style={styles.historyRow}>
+                  <Text style={[styles.historyCell, { width: 32, color: Colors.textMuted }]}>
+                    R{r.roundNumber}
+                  </Text>
+                  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Text style={[styles.historyCell, { color, fontWeight: FontWeight.bold }]}>
+                      Team {r.bidTeam}
+                    </Text>
+                    <Text style={[styles.historyOutcome, { color: r.success ? Colors.success : Colors.error }]}>
+                      {r.success ? '✓' : '✗'}
+                    </Text>
+                  </View>
+                  <Text style={[styles.historyCell, { width: 48, textAlign: 'center', color: Colors.textSecondary }]}>
+                    {r.bidAmount}{r.doubled ? '×2' : r.redoubled ? '×4' : ''}
+                  </Text>
+                  <Text style={[styles.historyCell, { width: 60, textAlign: 'right', fontWeight: FontWeight.bold, color: r.success ? Colors.success : Colors.error }]}>
+                    {change} tbl
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         <Button label="Next Round" onPress={handleContinue} fullWidth size="lg" />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -113,10 +156,8 @@ const styles = StyleSheet.create({
   loadingText: { color: Colors.textSecondary, fontSize: FontSize.lg },
 
   container: {
-    flex:    1,
     padding: Spacing.lg,
     gap:     Spacing.lg,
-    justifyContent: 'center',
   },
 
   resultBanner: {
@@ -184,4 +225,36 @@ const styles = StyleSheet.create({
   pointsTeam:      { alignItems: 'center', gap: Spacing.xs },
   pointsTeamLabel: { fontSize: FontSize.sm, fontWeight: FontWeight.bold },
   pointsValue:     { fontSize: FontSize.hero, fontWeight: FontWeight.heavy, color: Colors.textPrimary },
+
+  historyCard: {
+    backgroundColor: Colors.bgCard,
+    borderRadius:    Radius.xl,
+    padding:         Spacing.lg,
+    gap:             Spacing.xs,
+  },
+  historyTitle: {
+    fontSize:      FontSize.sm,
+    color:         Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom:  Spacing.xs,
+  },
+  historyHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    paddingBottom:  Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.bgSurface,
+    marginBottom:   Spacing.xs,
+  },
+  historyHeaderCell: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: FontWeight.medium },
+  historyRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.bgSurface,
+  },
+  historyCell:    { fontSize: FontSize.sm },
+  historyOutcome: { fontSize: FontSize.xs, fontWeight: FontWeight.heavy },
 });
