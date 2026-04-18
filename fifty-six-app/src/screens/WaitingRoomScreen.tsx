@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Share,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -35,8 +36,8 @@ export default function WaitingRoomScreen() {
 
   // Listen for room updates from the server
   useEffect(() => {
-    const onRoomUpdated = (data: { players: RoomPlayer[] }) => {
-      setPlayers(data.players);
+    const onRoomUpdated = (data: { room: { players: RoomPlayer[] } }) => {
+      setPlayers(data.room.players);
     };
     transport.on(SERVER_EVENTS.ROOM_UPDATED, onRoomUpdated);
     return () => transport.off(SERVER_EVENTS.ROOM_UPDATED, onRoomUpdated);
@@ -69,17 +70,19 @@ export default function WaitingRoomScreen() {
   };
 
   const handleLeave = () => {
-    Alert.alert('Leave Room', 'Are you sure you want to leave?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Leave',
-        style: 'destructive',
-        onPress: () => {
-          if (roomId) transport.leaveRoom({ roomId });
-          navigation.replace(ROUTES.HOME);
-        },
-      },
-    ]);
+    const doLeave = () => {
+      if (roomId) transport.leaveRoom({ roomId });
+      navigation.replace(ROUTES.HOME);
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Leave Room? Are you sure you want to leave?')) doLeave();
+    } else {
+      Alert.alert('Leave Room', 'Are you sure you want to leave?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Leave', style: 'destructive', onPress: doLeave },
+      ]);
+    }
   };
 
   // Build seat grid: filled seats + empty slots up to requiredPlayers

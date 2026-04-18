@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { z } from 'zod';
@@ -8,6 +9,7 @@ import { initSocketServer } from './sockets/socketServer';
 import { logger } from './utils/logger';
 
 const app = express();
+app.use(cors({ origin: config.clientOrigin }));
 app.use(express.json());
 
 const httpServer = createServer(app);
