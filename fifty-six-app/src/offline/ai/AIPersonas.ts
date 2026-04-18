@@ -7,14 +7,14 @@ interface AIPersona {
 }
 
 const PERSONAS: AIPersona[] = [
-  { displayName: 'Arjun',  avatarUrl: 'avatar://ai/arjun' },
-  { displayName: 'Priya',  avatarUrl: 'avatar://ai/priya' },
-  { displayName: 'Ravi',   avatarUrl: 'avatar://ai/ravi' },
-  { displayName: 'Meena',  avatarUrl: 'avatar://ai/meena' },
-  { displayName: 'Suresh', avatarUrl: 'avatar://ai/suresh' },
-  { displayName: 'Nisha',  avatarUrl: 'avatar://ai/nisha' },
-  { displayName: 'Vikram', avatarUrl: 'avatar://ai/vikram' },
-  { displayName: 'Deepa',  avatarUrl: 'avatar://ai/deepa' },
+  { displayName: 'Arjun',  avatarUrl: '🦊' },
+  { displayName: 'Priya',  avatarUrl: '🦋' },
+  { displayName: 'Ravi',   avatarUrl: '🐯' },
+  { displayName: 'Meena',  avatarUrl: '🦚' },
+  { displayName: 'Suresh', avatarUrl: '🐻' },
+  { displayName: 'Nisha',  avatarUrl: '🦅' },
+  { displayName: 'Vikram', avatarUrl: '🐲' },
+  { displayName: 'Deepa',  avatarUrl: '🌺' },
 ];
 
 let personaIndex = 0;

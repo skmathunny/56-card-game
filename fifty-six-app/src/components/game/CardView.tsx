@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '../../constants/cards';
 import { SUIT_SYMBOLS } from '../../constants/cards';
 import { Colors, Radius, FontSize, FontWeight, Spacing } from '../../constants/theme';
+import { useLobbyStore } from '../../store/lobbySlice';
+import { getDeckTheme } from '../../decks/deckRegistry';
 
 interface CardViewProps {
   card: Card;
@@ -20,12 +22,16 @@ const SIZES = {
 };
 
 export function CardView({ card, selected, legal = true, onPress, size = 'md', faceDown }: CardViewProps) {
-  const isRed = card.suit === 'hearts' || card.suit === 'diamonds';
-  const dims  = SIZES[size];
+  const deckId = useLobbyStore(s => s.settings?.deckId);
+  const theme  = getDeckTheme(deckId);
+
+  const isRed    = card.suit === 'hearts' || card.suit === 'diamonds';
+  const textColor = isRed ? theme.rankColor.red : theme.rankColor.black;
+  const dims     = SIZES[size];
 
   if (faceDown) {
     return (
-      <View style={[styles.card, dims, styles.cardBack]} />
+      <View style={[styles.card, dims, { backgroundColor: theme.cardBack, borderColor: theme.cardBack }]} />
     );
   }
 
@@ -37,17 +43,18 @@ export function CardView({ card, selected, legal = true, onPress, size = 'md', f
       style={[
         styles.card,
         dims,
+        { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder },
         selected && styles.cardSelected,
         !legal && styles.cardIllegal,
       ]}
     >
-      <Text style={[styles.rank, { color: isRed ? Colors.red : '#1a1a2e' }, !legal && styles.dimText]}>
+      <Text style={[styles.rank, { color: textColor }, !legal && styles.dimText]}>
         {card.rank}
       </Text>
-      <Text style={[styles.suitCenter, { color: isRed ? Colors.red : '#1a1a2e' }, !legal && styles.dimText]}>
+      <Text style={[styles.suitCenter, { color: textColor }, !legal && styles.dimText]}>
         {SUIT_SYMBOLS[card.suit]}
       </Text>
-      <Text style={[styles.rankBottom, { color: isRed ? Colors.red : '#1a1a2e' }, !legal && styles.dimText]}>
+      <Text style={[styles.rankBottom, { color: textColor }, !legal && styles.dimText]}>
         {card.rank}
       </Text>
     </TouchableOpacity>
@@ -56,10 +63,8 @@ export function CardView({ card, selected, legal = true, onPress, size = 'md', f
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.cardFace,
     borderRadius:    Radius.md,
     borderWidth:     1,
-    borderColor:     Colors.cardBorder,
     padding:         Spacing.xs,
     justifyContent:  'space-between',
     alignItems:      'center',
@@ -68,10 +73,6 @@ const styles = StyleSheet.create({
     shadowOpacity:   0.25,
     shadowRadius:    4,
     elevation:       4,
-  },
-  cardBack: {
-    backgroundColor: Colors.bgSurface,
-    borderColor:     Colors.bgCard,
   },
   cardSelected: {
     borderColor:   Colors.accent,

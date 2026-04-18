@@ -75,6 +75,10 @@ export interface RoundSummary {
   redoubled: boolean;
 }
 
+export interface RoundHistoryEntry extends RoundSummary {
+  roundNumber: number;
+}
+
 export interface ChatMessage {
   id: string;
   playerId: string;
@@ -87,6 +91,7 @@ interface GameStore {
   gameState: PublicGameState | null;
   myHand: Card[];
   roundSummary: RoundSummary | null;
+  roundHistory: RoundHistoryEntry[];
   chatMessages: ChatMessage[];
   unreadChatCount: number;
   disconnectedPlayers: Set<string>;
@@ -105,6 +110,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameState: null,
   myHand: [],
   roundSummary: null,
+  roundHistory: [],
   chatMessages: [],
   unreadChatCount: 0,
   disconnectedPlayers: new Set(),
@@ -114,7 +120,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   setRoundSummary(roundSummary) {
-    set({ roundSummary });
+    const roundNumber = get().gameState?.roundNumber ?? get().roundHistory.length + 1;
+    set(s => ({
+      roundSummary,
+      roundHistory: [...s.roundHistory, { ...roundSummary, roundNumber }],
+    }));
   },
 
   clearRoundSummary() {
@@ -149,6 +159,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameState: null,
       myHand: [],
       roundSummary: null,
+      roundHistory: [],
       chatMessages: [],
       unreadChatCount: 0,
       disconnectedPlayers: new Set(),

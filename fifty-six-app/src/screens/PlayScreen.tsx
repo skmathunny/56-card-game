@@ -15,7 +15,6 @@ import { useTransport } from '../services/transportContext';
 import { useGameStore } from '../store/gameSlice';
 import { useUIStore } from '../store/uiSlice';
 import { useLobbyStore } from '../store/lobbySlice';
-import { useSocket } from '../hooks/useSocket';
 import { CardView } from '../components/game/CardView';
 import { ChatPanel } from '../components/game/ChatPanel';
 import { TrickHistoryPanel } from '../components/game/TrickHistoryPanel';
@@ -30,8 +29,6 @@ const TEAM_COLORS = { A: Colors.teamA, B: Colors.teamB };
 export default function PlayScreen() {
   const navigation = useNavigation<Nav>();
   const transport  = useTransport();
-  useSocket();
-
   const { gameState, myHand, unreadChatCount } = useGameStore();
   const { myPlayerId }                         = useLobbyStore();
   const {
@@ -69,7 +66,7 @@ export default function PlayScreen() {
     ? myHand.some((c) => c.suit === ledSuit)
     : false;
   const isLegal = (card: Card) => {
-    if (!isMyTurn) return false;
+    if (!isMyTurn) return true;
     if (!ledSuit) return true;
     if (!handHasSuit) return true;
     return card.suit === ledSuit;

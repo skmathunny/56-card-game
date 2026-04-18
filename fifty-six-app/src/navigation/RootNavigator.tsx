@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ROUTES } from './routes';
+import { useSocket } from '../hooks/useSocket';
 
 import SplashScreen    from '../screens/SplashScreen';
 import LoginScreen     from '../screens/LoginScreen';
@@ -19,6 +20,7 @@ import EndGameScreen   from '../screens/EndGameScreen';
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
+  useSocket();
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={ROUTES.SPLASH} screenOptions={{ headerShown: false }}>

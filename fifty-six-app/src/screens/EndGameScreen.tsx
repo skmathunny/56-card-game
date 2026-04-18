@@ -17,7 +17,7 @@ const TEAM_COLORS = { A: Colors.teamA, B: Colors.teamB };
 export default function EndGameScreen() {
   const navigation   = useNavigation<Nav>();
   const transport    = useTransport();
-  const { gameState, clearGame } = useGameStore();
+  const { gameState, roundHistory, clearGame } = useGameStore();
   const { roomId, players, myPlayerId, clearLobby } = useLobbyStore();
 
   if (!gameState) {
@@ -116,6 +116,27 @@ export default function EndGameScreen() {
           </View>
         </View>
 
+        {/* Round history */}
+        {roundHistory.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Round History</Text>
+            {roundHistory.map((r) => (
+              <View key={r.roundNumber} style={styles.historyRow}>
+                <Text style={styles.historyRound}>R{r.roundNumber}</Text>
+                <Text style={[styles.historyTeam, { color: TEAM_COLORS[r.bidTeam] }]}>
+                  Team {r.bidTeam}
+                </Text>
+                <Text style={styles.historyBid}>
+                  {r.bidAmount}{r.doubled ? '×2' : r.redoubled ? '×4' : ''}
+                </Text>
+                <Text style={[styles.historyResult, { color: r.success ? Colors.success : Colors.error }]}>
+                  {r.success ? `+${r.tablesChange}` : `-${r.tablesChange}`}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Actions */}
         <View style={styles.actions}>
           <Button label="Play Again" onPress={handleRematch} fullWidth size="lg" />
@@ -199,6 +220,19 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: FontSize.xxl, fontWeight: FontWeight.heavy, color: Colors.textPrimary },
   statLabel: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center' },
+
+  historyRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    gap:            Spacing.sm,
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.bgSurface,
+  },
+  historyRound: { fontSize: FontSize.xs, color: Colors.textMuted, width: 24 },
+  historyTeam:  { fontSize: FontSize.sm, fontWeight: FontWeight.bold, flex: 1 },
+  historyBid:   { fontSize: FontSize.sm, color: Colors.textSecondary, width: 40, textAlign: 'center' },
+  historyResult:{ fontSize: FontSize.sm, fontWeight: FontWeight.bold, width: 36, textAlign: 'right' },
 
   actions: { gap: Spacing.sm, paddingBottom: Spacing.lg },
 });

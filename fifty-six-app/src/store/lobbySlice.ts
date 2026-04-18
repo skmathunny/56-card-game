@@ -15,6 +15,7 @@ export interface RoomSettings {
   startingTables: number;
   bidTimerSeconds: number;
   expiryHours: number;
+  deckId?: string;
 }
 
 export interface LobbyState {

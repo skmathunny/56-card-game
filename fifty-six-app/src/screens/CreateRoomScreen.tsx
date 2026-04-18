@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../constants/theme';
 import { SERVER_URL } from '../constants/game';
+import { DECK_THEMES, DEFAULT_DECK_ID } from '../decks/deckRegistry';
 import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
 import { useTransport } from '../services/transportContext';
@@ -34,6 +35,7 @@ export default function CreateRoomScreen() {
   const [playerCount, setPlayerCount]   = useState<PlayerCount>(4);
   const [tables, setTables]             = useState(7);
   const [bidTimer, setBidTimer]         = useState(30);
+  const [deckId, setDeckId]             = useState(DEFAULT_DECK_ID);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
 
@@ -70,6 +72,7 @@ export default function CreateRoomScreen() {
         startingTables:  tables,
         bidTimerSeconds: bidTimer,
         expiryHours:     4,
+        deckId,
       };
       setRoom(room.id, room.code, settings);
       setMyPlayer(yourPlayer.id);
@@ -142,6 +145,24 @@ export default function CreateRoomScreen() {
                 onPress={() => setBidTimer(t)}
               >
                 <Text style={[styles.timerText, bidTimer === t && styles.timerTextActive]}>{t}s</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Card deck */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Card Deck</Text>
+          <View style={styles.timerRow}>
+            {Object.values(DECK_THEMES).map((deck) => (
+              <TouchableOpacity
+                key={deck.id}
+                style={[styles.timerBtn, deckId === deck.id && styles.timerBtnActive]}
+                onPress={() => setDeckId(deck.id)}
+              >
+                <Text style={[styles.timerText, deckId === deck.id && styles.timerTextActive]}>
+                  {deck.name}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>

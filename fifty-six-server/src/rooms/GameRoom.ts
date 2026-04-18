@@ -211,6 +211,9 @@ export class GameRoom {
       return;
     }
 
+    // Send new hand to clients immediately so they see cards during the dealing animation
+    this.broadcastGameState();
+
     // Auto-advance to bidding after dealing pause
     setTimeout(() => {
       if (!this.gameState) return;

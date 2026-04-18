@@ -16,7 +16,6 @@ import { Button } from '../components/common';
 import { useTransport } from '../services/transportContext';
 import { useGameStore } from '../store/gameSlice';
 import { useLobbyStore } from '../store/lobbySlice';
-import { useSocket } from '../hooks/useSocket';
 import { SUIT_SYMBOLS } from '../constants/cards';
 import type { Suit } from '../constants/cards';
 
@@ -35,8 +34,6 @@ const BID_AMOUNTS = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
 export default function DealAndBidScreen() {
   const navigation = useNavigation<Nav>();
   const transport  = useTransport();
-  useSocket();
-
   const { gameState, myHand } = useGameStore();
   const { myPlayerId }        = useLobbyStore();
 
@@ -240,6 +237,12 @@ export default function DealAndBidScreen() {
       {gameState.phase === 'dealing' && (
         <View style={styles.waitingWrap}>
           <Text style={styles.waitingText}>Dealing cards…</Text>
+        </View>
+      )}
+
+      {gameState.phase === 'scoring' && (
+        <View style={styles.waitingWrap}>
+          <Text style={styles.waitingText}>Preparing next round…</Text>
         </View>
       )}
     </SafeAreaView>
