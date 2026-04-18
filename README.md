@@ -71,8 +71,11 @@ npm run dev               # ts-node-dev with hot reload
 The server starts on `http://localhost:3000` by default.
 
 ```bash
-npm test                  # run 42 engine unit tests
+npm test              # run 42 engine unit tests
+npm run test:coverage # run with v8 coverage report
 ```
+
+See [docs/testing.md](docs/testing.md) for full coverage breakdown and gaps.
 
 ### App
 
