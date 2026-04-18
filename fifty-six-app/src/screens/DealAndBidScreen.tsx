@@ -77,9 +77,14 @@ export default function DealAndBidScreen() {
     gameState.phase === 'bidding' &&
     gameState.players[gameState.biddingState.currentBidderSeatIndex]?.id === myPlayerId;
 
-  const highBid    = gameState.biddingState.currentHighBid;
-  const minBid     = highBid ? (highBid.amount ?? 28) + 1 : 28;
+  const highBid      = gameState.biddingState.currentHighBid;
+  const minBid       = highBid ? (highBid.amount ?? 28) + 1 : 28;
   const validAmounts = BID_AMOUNTS.filter((a) => a >= minBid);
+
+  // Keep selectedAmount at or above the current minimum
+  useEffect(() => {
+    if (selectedAmount < minBid) setSelectedAmount(minBid);
+  }, [minBid]);
 
   const handleBid = async () => {
     if (!gameState) return;
@@ -106,14 +111,15 @@ export default function DealAndBidScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Teams scoreboard */}
       <View style={styles.scoreboard}>
-        {(['A', 'B'] as const).map((team) => (
-          <View key={team} style={styles.teamScore}>
-            <Text style={[styles.teamLabel, { color: team === 'A' ? Colors.teamA : Colors.teamB }]}>
-              Team {team}
-            </Text>
-            <Text style={styles.tablesValue}>{gameState.teams[team].tables} tables</Text>
-          </View>
-        ))}
+        {(['A', 'B'] as const).map((team) => {
+          const color = team === 'A' ? Colors.teamA : Colors.teamB;
+          return (
+            <View key={team} style={[styles.teamScore, { backgroundColor: color + '18', borderRadius: 10, padding: Spacing.sm, borderWidth: 1, borderColor: color + '44' }]}>
+              <Text style={[styles.teamLabel, { color }]}>Team {team}</Text>
+              <Text style={[styles.tablesValue, { color }]}>{gameState.teams[team].tables} tables</Text>
+            </View>
+          );
+        })}
         <View style={styles.roundBadge}>
           <Text style={styles.roundText}>Round {gameState.roundNumber}</Text>
         </View>

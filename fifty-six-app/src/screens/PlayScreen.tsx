@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Modal,
+  useWindowDimensions,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -38,6 +40,8 @@ export default function PlayScreen() {
     trickHistoryVotePrompt, dismissTrickHistoryVote,
     isRoundSummaryVisible,
   } = useUIStore();
+  const { width } = useWindowDimensions();
+  const [teamPopup, setTeamPopup] = useState<'A' | 'B' | null>(null);
 
 
   useEffect(() => {
@@ -93,6 +97,7 @@ export default function PlayScreen() {
 
   const currentPlayer = gameState.players[gameState.currentPlayerSeatIndex];
   const trump = gameState.trump;
+  const trickCardSize = width >= 600 ? 'lg' : width >= 400 ? 'md' : 'sm';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -100,11 +105,12 @@ export default function PlayScreen() {
       <View style={styles.topBar}>
         <View style={styles.teams}>
           {(['A', 'B'] as const).map((team) => (
-            <View key={team} style={styles.teamChip}>
-              <Text style={[styles.teamLabel, { color: TEAM_COLORS[team] }]}>T{team}</Text>
-              <Text style={styles.teamTables}>{gameState.teams[team].tables}▼</Text>
+            <TouchableOpacity key={team} onPress={() => setTeamPopup(team)}
+              style={[styles.teamChip, { backgroundColor: TEAM_COLORS[team] + '22', borderColor: TEAM_COLORS[team] + '66' }]}>
+              <Text style={[styles.teamLabel, { color: TEAM_COLORS[team] }]}>Team {team}</Text>
+              <Text style={[styles.teamTables, { color: TEAM_COLORS[team] }]}>{gameState.teams[team].tables}▼</Text>
               <Text style={styles.teamPts}>{gameState.teams[team].roundPoints}pt</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -179,7 +185,7 @@ export default function PlayScreen() {
             return (
               <View key={`${tc.playerId}-${tc.card.id}`} style={styles.trickCardWrap}>
                 <Text style={styles.trickPlayerName}>{player?.displayName ?? ''}</Text>
-                <CardView card={tc.card} size="sm" />
+                <CardView card={tc.card} size={trickCardSize} />
               </View>
             );
           })}
@@ -257,6 +263,40 @@ export default function PlayScreen() {
         </View>
       </Modal>
 
+      {/* Team detail popup */}
+      <Modal visible={!!teamPopup} animationType="fade" transparent onRequestClose={() => setTeamPopup(null)}>
+        <TouchableOpacity style={styles.voteOverlay} activeOpacity={1} onPress={() => setTeamPopup(null)}>
+          <View style={[styles.voteCard, { borderTopWidth: 3, borderTopColor: teamPopup ? TEAM_COLORS[teamPopup] : Colors.accent }]}>
+            {teamPopup && (
+              <>
+                <Text style={[styles.voteTitle, { color: TEAM_COLORS[teamPopup] }]}>Team {teamPopup}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm }}>
+                  <Text style={styles.voteBody}>{gameState.teams[teamPopup].tables} tables remaining</Text>
+                  <Text style={styles.voteBody}>{gameState.teams[teamPopup].roundPoints} pts this round</Text>
+                </View>
+                <ScrollView>
+                  {gameState.players.filter(p => p.teamId === teamPopup).map(p => {
+                    const tricksWon = gameState.tricks.filter(t => t.winnerId === p.id).length;
+                    const isCurrent = gameState.players[gameState.currentPlayerSeatIndex]?.id === p.id;
+                    return (
+                      <View key={p.id} style={styles.teamPopupRow}>
+                        <Text style={styles.teamPopupAvatar}>{p.avatarUrl}</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.teamPopupName, isCurrent && { color: Colors.accent }]}>
+                            {p.displayName}{p.id === myPlayerId ? ' (You)' : ''}
+                          </Text>
+                        </View>
+                        <Text style={styles.teamPopupTricks}>{tricksWon} tricks</Text>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </>
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Trick history vote prompt */}
       <Modal visible={!!trickHistoryVotePrompt} animationType="fade" transparent>
         <View style={styles.voteOverlay}>
@@ -306,14 +346,26 @@ const styles = StyleSheet.create({
     flexDirection:   'row',
     alignItems:      'center',
     gap:             4,
-    backgroundColor: Colors.bgCard,
     borderRadius:    Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
+    borderWidth:     1,
   },
-  teamLabel: { fontSize: FontSize.xs, fontWeight: FontWeight.heavy },
-  teamTables: { fontSize: FontSize.xs, color: Colors.textPrimary, fontWeight: FontWeight.bold },
+  teamLabel:  { fontSize: FontSize.xs, fontWeight: FontWeight.heavy },
+  teamTables: { fontSize: FontSize.xs, fontWeight: FontWeight.bold },
   teamPts:    { fontSize: FontSize.xs, color: Colors.textMuted },
+
+  teamPopupRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    gap:            Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.bgSurface,
+  },
+  teamPopupAvatar: { fontSize: 24 },
+  teamPopupName:   { fontSize: FontSize.sm, color: Colors.textPrimary, fontWeight: FontWeight.medium },
+  teamPopupTricks: { fontSize: FontSize.xs, color: Colors.textMuted, width: 52, textAlign: 'right' },
 
   trumpBadge: {
     flexDirection:   'row',

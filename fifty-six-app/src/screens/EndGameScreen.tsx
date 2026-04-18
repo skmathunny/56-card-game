@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +30,7 @@ export default function EndGameScreen() {
 
   const winner = gameState.winner;
   const loser  = winner === 'A' ? 'B' : 'A';
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleRematch = async () => {
     if (!roomId) return;
@@ -116,11 +117,14 @@ export default function EndGameScreen() {
           </View>
         </View>
 
-        {/* Round history */}
+        {/* Round history toggle */}
         {roundHistory.length > 0 && (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Round History</Text>
-            {roundHistory.map((r) => (
+            <TouchableOpacity style={styles.historyToggle} onPress={() => setShowHistory(v => !v)}>
+              <Text style={styles.cardTitle}>Round History</Text>
+              <Text style={styles.historyToggleIcon}>{showHistory ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+            {showHistory && roundHistory.map((r) => (
               <View key={r.roundNumber} style={styles.historyRow}>
                 <Text style={styles.historyRound}>R{r.roundNumber}</Text>
                 <Text style={[styles.historyTeam, { color: TEAM_COLORS[r.bidTeam] }]}>
@@ -220,6 +224,13 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: FontSize.xxl, fontWeight: FontWeight.heavy, color: Colors.textPrimary },
   statLabel: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center' },
+
+  historyToggle: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  historyToggleIcon: { fontSize: FontSize.xs, color: Colors.textMuted },
 
   historyRow: {
     flexDirection:  'row',
