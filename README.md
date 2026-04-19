@@ -6,7 +6,9 @@ A real-time multiplayer implementation of the classic South Indian trick-taking 
 
 56 is a trick-taking card game for 4, 6, or 8 players in two teams. Players bid on how many points they expect to win, choose a trump suit, then play tricks to meet or beat the bid. Teams win or lose "tables" based on bid success. The game ends when one team runs out of tables.
 
-**Card rank order (highest to lowest):** J → 9 → A → 10 → K → Q → 8 → 7
+**Card rank order (highest to lowest):** J → 9 → A → 10 → K → Q
+
+**Point values:** J = 3 pts · 9 = 2 pts · A = 1 pt · 10 = 1 pt · K = 0 · Q = 0
 
 ## Repository Structure
 
@@ -71,11 +73,24 @@ npm run dev               # ts-node-dev with hot reload
 The server starts on `http://localhost:3000` by default.
 
 ```bash
-npm test              # run 42 engine unit tests
-npm run test:coverage # run with v8 coverage report
+npm test                        # run all 130 unit tests
+npm test -- --reporter=verbose  # verbose per-test output
+npm test -- --coverage          # with V8 coverage report
 ```
 
-See [docs/testing.md](docs/testing.md) for full coverage breakdown and gaps.
+**Test results (2026-04-18): 130 / 130 passing across 7 suites, 0 failures.**
+
+| Suite | Tests | Covers |
+|-------|-------|--------|
+| BiddingEngine | 24 | Bid range (4p: 14–28, 6p: 28–56), turn order, double/redouble, all-pass |
+| ScoringEngine | 15 | Success/failure, table changes, doubles, finalTeamPoints snapshot |
+| TrickEngine   | 11 | Play validation, trump resolution, point calculation |
+| Deck          | 11 | 1-deck/2-deck, unique IDs, point totals, shuffle immutability |
+| Dealer        | 16 | Hand distribution, firstBidder, nextAnticlockwise wrapping |
+| AIPlayer      | 12 | Bid range per playerCount, trump selection, play strategy |
+| GameEngine    | 36 | Full lifecycle: createGame → bidding → playing → scoring → winner |
+
+Engine layer statement coverage: **100%**. Branch coverage: **87–100%** per file.
 
 ### App
 
@@ -125,10 +140,15 @@ npm start                 # start Expo dev server
 
 ## Key Engine Rules
 
-- **Bidding:** minimum bid 28, maximum 56. All-pass → bid defaults to 28 with no trumps for the dealer. Consecutive passes needed: N−1 after a bid, N for all-pass.
-- **Tricks:** 4-player = 6 tricks (24-card deck); 6/8-player = 4 tricks (24/32-card deck).
-- **Trump:** J and 9 of trump suit are always legal to play regardless of led suit.
-- **Scoring:** tablesForBid ≤39 → 1 table, ≤47 → 2, ≤55 → 3, 56 → 4. Failure = (base + 1) tables lost.
+| Players | Decks | Cards each | Tricks | Bid range |
+|---------|-------|------------|--------|-----------|
+| 4       | 1     | 6          | 6      | 14 – 28   |
+| 6       | 2     | 8          | 8      | 28 – 56   |
+| 8       | 2     | 6          | 6      | 28 – 56   |
+
+- **Bidding:** player-count-aware min/max. All-pass → dealer forced to minimum bid with no-trumps. Consecutive passes required: N−1 after a bid on the table, N for full all-pass.
+- **Tricks:** follow-suit enforced; off-suit only legal when void. Trump beats led suit; J > 9 > A > 10 > K > Q within each suit.
+- **Scoring:** bid 14–39 → 1 table, 40–47 → 2 tables, 48–55 → 3 tables, 56 → 4 tables. Double ×2, Redouble ×4. Failure: bid team loses (base + 1) × multiplier tables.
 - **Winning:** a team wins when the opposing team reaches 0 tables.
 
 ---
@@ -158,7 +178,7 @@ All 33 user stories and ~90 test case issues are tracked on the [GitHub project 
 | US15 | Pass during bidding | ✅ Done |
 | US16 | Double or redouble a bid | ✅ Done |
 | US17 | See all bids during bidding round | ✅ Done |
-| US18 | Bid timer with auto-pass on expiry | 🔲 Backlog |
+| US18 | Bid timer with auto-pass on expiry | 🔶 Partial (30 s display timer, no auto-pass yet) |
 | US19 | Illegal cards are greyed out during play | ✅ Done |
 | US20 | Two-tap to play a card | ✅ Done |
 | US21 | See trick winning animation | 🔲 Backlog |
@@ -175,7 +195,31 @@ All 33 user stories and ~90 test case issues are tracked on the [GitHub project 
 | US32 | Rematch without returning to lobby | 🔲 Backlog |
 | US33 | Play offline against AI | ✅ Done |
 
-**25 of 33 user stories complete.**
+**25 of 33 user stories complete** (US18 partially done).
+
+---
+
+## Recent Changes
+
+### 2026-04-18 — Game rule fixes, logging, UI overhaul, test expansion
+
+**Bug fixes**
+- 4-player bid range corrected to 14–28 (was 28–56 everywhere, breaking all 4p bidding)
+- AI player bid range is now player-count-aware (was hardcoded to 6p+ range, causing `BID_OUT_OF_RANGE` errors)
+- Zod schema `BidSchema` minimum lowered from 28 → 14 so 4p bids aren't silently rejected before reaching the engine
+- 6-player games now use 2 decks with 8 cards each and 8 tricks (was incorrectly using 24 cards)
+- Round points displayed correctly on RoundSummaryScreen — `finalTeamPoints` snapshot captured before server resets them
+
+**Features**
+- Structured logging throughout server (Pino child loggers per room/round/socket)
+- DealAndBidScreen: 30 s countdown timer, team panels with avatar chips, current-bidder pulse animation, responsive card sizing
+- RoundSummaryScreen: full game history table with per-round bid, result, and table change
+- EndGameScreen: last round summary badge inside winner banner, collapsible round history
+
+**Testing**
+- Test suite expanded from 66 → 130 tests (+64)
+- New suites: `GameEngine.test.ts` (36), `AIPlayer.test.ts` (12), `Dealer.test.ts` (16)
+- Engine layer: 100% statement coverage, 87–100% branch coverage
 
 ---
 
