@@ -116,6 +116,14 @@ describe('checkWinner', () => {
   it('returns null when both teams have tables', () => {
     expect(checkWinner(makeTeams(6, 8))).toBeNull();
   });
+
+  it('returns null when both teams have exactly 1 table', () => {
+    expect(checkWinner(makeTeams(1, 1))).toBeNull();
+  });
+
+  it('returns B when A has exactly 0 and B has 1', () => {
+    expect(checkWinner(makeTeams(0, 1))).toBe('B');
+  });
 });
 
 describe('applyRoundResult', () => {
@@ -127,6 +135,13 @@ describe('applyRoundResult', () => {
     expect(updated.A.tables).toBe(12);
   });
 
+  it('bid team tables unchanged on success', () => {
+    const teams = makeTeams(12, 12, 20, 0);
+    const result = scoreRound(makeBid(14), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.A.tables).toBe(12);
+  });
+
   it('bid team loses tables on failure', () => {
     const teams = makeTeams(12, 12, 20, 0);
     const result = scoreRound(makeBid(32), teams, players);
@@ -134,10 +149,68 @@ describe('applyRoundResult', () => {
     expect(updated.A.tables).toBeLessThan(12);
   });
 
+  it('opponent tables unchanged on failure', () => {
+    const teams = makeTeams(12, 12, 10, 18);
+    const result = scoreRound(makeBid(14), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.B.tables).toBe(12);
+  });
+
   it('tables do not go below zero', () => {
     const teams = makeTeams(1, 1, 20, 0);
     const result = scoreRound(makeBid(56), teams, players);
     const updated = applyRoundResult(teams, result);
     expect(updated.A.tables).toBeGreaterThanOrEqual(0);
+  });
+
+  it('opponent tables clamped to 0 when loss exceeds remaining (bid 56 success, opponent has 2)', () => {
+    const teams = makeTeams(12, 2, 56, 0);
+    const result = scoreRound(makeBid(56), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.B.tables).toBe(0);
+    expect(updated.A.tables).toBe(12);
+  });
+
+  it('bid team tables clamped to 0 when failure loss exceeds remaining', () => {
+    // A bids 48 (tier 3), has 0 points → failure → loses (3+1)*1 = 4 tables. A has 3 → clamped to 0
+    const teams = makeTeams(3, 12, 0, 28);
+    const result = scoreRound(makeBid(48), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.A.tables).toBe(0);
+    expect(updated.B.tables).toBe(12);
+  });
+
+  it('roundPoints reset to 0 for both teams after success', () => {
+    const teams = makeTeams(12, 12, 20, 8);
+    const result = scoreRound(makeBid(14), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.A.roundPoints).toBe(0);
+    expect(updated.B.roundPoints).toBe(0);
+  });
+
+  it('roundPoints reset to 0 for both teams after failure', () => {
+    const teams = makeTeams(12, 12, 10, 18);
+    const result = scoreRound(makeBid(14), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.A.roundPoints).toBe(0);
+    expect(updated.B.roundPoints).toBe(0);
+  });
+
+  it('Team B bidding: B wins tables from A on success', () => {
+    // p1 is team B; B bids 28, B has 30 pts → success → A loses 1 table
+    const teams = makeTeams(12, 12, 0, 30);
+    const result = scoreRound(makeBid(28, 'p1'), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.A.tables).toBe(11);
+    expect(updated.B.tables).toBe(12);
+  });
+
+  it('Team B bidding: B loses tables on failure', () => {
+    // p1 is team B; B bids 14, B has 5 pts → failure → B loses 2 tables
+    const teams = makeTeams(12, 12, 23, 5);
+    const result = scoreRound(makeBid(14, 'p1'), teams, players);
+    const updated = applyRoundResult(teams, result);
+    expect(updated.B.tables).toBe(10);
+    expect(updated.A.tables).toBe(12);
   });
 });

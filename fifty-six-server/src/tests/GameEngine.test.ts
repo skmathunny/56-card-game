@@ -452,6 +452,66 @@ describe('scoreRoundAndAdvance', () => {
     expect(roundResult!.finalTeamPoints.B).toBe(12);
   });
 
+  it('Team B wins when Team A fails and reaches 0 tables', () => {
+    // Team A bids 14, has 5 pts → failure → A loses 2 tables. A has 2 → A reaches 0 → B wins
+    const s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 14, roundPointsA: 5, tablesA: 2, tablesB: 12 });
+    const { state: next } = scoreRoundAndAdvance(s);
+    expect(next.teams.A.tables).toBe(0);
+    expect(next.winner).toBe('B');
+    expect(next.phase).toBe('complete');
+  });
+
+  it('Team B wins when Team B bids and succeeds, draining A', () => {
+    // p1 is team B; B bids 14, B has 20 pts → success → A loses 1 table. A has 1 → A = 0 → B wins
+    const s = makeScoringState({ bidPlayerId: 'p1', bidAmount: 14, roundPointsA: 8, roundPointsB: 20, tablesA: 1, tablesB: 12 });
+    const { state: next } = scoreRoundAndAdvance(s);
+    expect(next.teams.A.tables).toBe(0);
+    expect(next.winner).toBe('B');
+    expect(next.phase).toBe('complete');
+  });
+
+  it('bid 56 success wipes out opponent with fewer than 4 tables', () => {
+    // Team A bids 56, earns 56 pts → success → 4 table change. Team B has 3 → clamped to 0 → A wins
+    const s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 56, roundPointsA: 56, tablesB: 3 });
+    const { state: next } = scoreRoundAndAdvance(s);
+    expect(next.teams.B.tables).toBe(0);
+    expect(next.winner).toBe('A');
+    expect(next.phase).toBe('complete');
+  });
+
+  it('doubled bid ends game from 2 tables in one round', () => {
+    // Team A doubles at 14, earns enough → 2 table change. Team B has 2 → B = 0 → A wins
+    const s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 14, roundPointsA: 16, tablesB: 2 });
+    s.winningBid = { ...s.winningBid!, type: 'double' };
+    const { state: next } = scoreRoundAndAdvance(s);
+    expect(next.teams.B.tables).toBe(0);
+    expect(next.winner).toBe('A');
+    expect(next.phase).toBe('complete');
+  });
+
+  it('complete state: no new cards dealt, phase stays complete', () => {
+    const s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 14, roundPointsA: 16, tablesB: 1 });
+    const { state: complete } = scoreRoundAndAdvance(s);
+    expect(complete.phase).toBe('complete');
+    complete.players.forEach(p => expect(p.hand).toHaveLength(0));
+  });
+
+  it('complete state: scoreRoundAndAdvance returns WRONG_PHASE', () => {
+    const s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 14, roundPointsA: 16, tablesB: 1 });
+    const { state: complete } = scoreRoundAndAdvance(s);
+    const { error } = scoreRoundAndAdvance(complete);
+    expect(error).toBe('WRONG_PHASE');
+  });
+
+  it('winner persists: winner field stays set in complete state', () => {
+    const s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 14, roundPointsA: 16, tablesB: 1 });
+    const { state: complete } = scoreRoundAndAdvance(s);
+    expect(complete.winner).toBe('A');
+    // Calling scoreRoundAndAdvance again returns WRONG_PHASE but winner is still A
+    const { state: unchanged } = scoreRoundAndAdvance(complete);
+    expect(unchanged.winner).toBe('A');
+  });
+
   it('multi-round: game ends when a team reaches 0 tables', () => {
     // 3 successive wins by Team A at bid 14 should drain Team B from 3 → 0
     let s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 14, roundPointsA: 16, tablesA: 12, tablesB: 3 });
@@ -472,6 +532,107 @@ describe('scoreRoundAndAdvance', () => {
     expect(s3.teams.B.tables).toBe(0);
     expect(s3.winner).toBe('A');
     expect(s3.phase).toBe('complete');
+  });
+});
+
+// ── new game after end game ───────────────────────────────────────────────
+
+describe('new game after end game', () => {
+  function finishedGame(): GameState {
+    // Build a scoring state where Team B is eliminated, then score it to 'complete'
+    const s: GameState = {
+      id: 'g1', roomId: 'r1', playerCount: 4, roundNumber: 5,
+      phase: 'scoring',
+      players: [
+        makePlayerFull('p0', 0, 'A', []),
+        makePlayerFull('p1', 1, 'B', []),
+        makePlayerFull('p2', 2, 'A', []),
+        makePlayerFull('p3', 3, 'B', []),
+      ],
+      teams: {
+        A: { id: 'A', playerIds: ['p0', 'p2'], tables: 10, roundPoints: 20 },
+        B: { id: 'B', playerIds: ['p1', 'p3'], tables: 1,  roundPoints: 8  },
+      },
+      dealerSeatIndex: 2,
+      currentPlayerSeatIndex: 0,
+      biddingState: createBiddingState(1),
+      winningBid: makeBid('p0', 14),
+      trump: 'spades',
+      tricks: [],
+      currentTrick: null,
+      winner: null,
+    };
+    return scoreRoundAndAdvance(s).state;
+  }
+
+  it('finished game is in complete phase with a winner', () => {
+    const complete = finishedGame();
+    expect(complete.phase).toBe('complete');
+    expect(complete.winner).toBe('A');
+  });
+
+  it('new game resets phase to dealing', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    expect(newGame.phase).toBe('dealing');
+  });
+
+  it('new game resets winner to null', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    expect(newGame.winner).toBeNull();
+  });
+
+  it('new game resets round number to 1', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    expect(newGame.roundNumber).toBe(1);
+  });
+
+  it('new game resets both teams tables to startingTables', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    expect(newGame.teams.A.tables).toBe(12);
+    expect(newGame.teams.B.tables).toBe(12);
+  });
+
+  it('new game resets tables even when called with different startingTables', () => {
+    const newGame = createGame('room1', makePlayers(4), 7);
+    expect(newGame.teams.A.tables).toBe(7);
+    expect(newGame.teams.B.tables).toBe(7);
+  });
+
+  it('new game deals fresh cards to all players', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    newGame.players.forEach(p => expect(p.hand.length).toBeGreaterThan(0));
+  });
+
+  it('new game deals different cards than a previous game (shuffle is fresh)', () => {
+    const game1 = createGame('room1', makePlayers(4), 12);
+    const game2 = createGame('room1', makePlayers(4), 12);
+    const ids1 = game1.players.flatMap(p => p.hand.map(c => c.id)).join(',');
+    const ids2 = game2.players.flatMap(p => p.hand.map(c => c.id)).join(',');
+    expect(ids1).not.toBe(ids2);
+  });
+
+  it('new game preserves same player count as the finished game', () => {
+    const newGame4p = createGame('room1', makePlayers(4), 12);
+    const newGame6p = createGame('room1', makePlayers(6), 12);
+    expect(newGame4p.playerCount).toBe(4);
+    expect(newGame6p.playerCount).toBe(6);
+  });
+
+  it('new game resets roundPoints to 0 for both teams', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    expect(newGame.teams.A.roundPoints).toBe(0);
+    expect(newGame.teams.B.roundPoints).toBe(0);
+  });
+
+  it('new game clears tricks and currentTrick', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    expect(newGame.tricks).toHaveLength(0);
+    expect(newGame.currentTrick).toBeNull();
+  });
+
+  it('new game clears winningBid from previous round', () => {
+    const newGame = createGame('room1', makePlayers(4), 12);
+    expect(newGame.winningBid).toBeNull();
   });
 });
 

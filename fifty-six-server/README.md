@@ -67,20 +67,20 @@ npm test -- --coverage          # with V8 coverage report
 
 ```
  Test Files  7 passed (7)
-      Tests  157 passed (157)
-   Duration  ~783ms
+      Tests  186 passed (186)
+   Duration  ~808ms
 ```
 
 | Test file             | Tests | What is covered |
 |-----------------------|-------|-----------------|
 | BiddingEngine.test.ts | 36    | Bid range (4p/6p/8p), turn order, raise/double/redouble, all-pass completion, 6p/8p completion |
-| ScoringEngine.test.ts | 22    | Success/failure, table tiers (all boundaries), doubles/redoubles, failure formula, finalTeamPoints |
+| ScoringEngine.test.ts | 32    | Success/failure, table tiers, doubles/redoubles, failure formula, B-bids, table clamping, roundPoints reset, checkWinner edge cases |
 | TrickEngine.test.ts   | 11    | Play validation, trump resolution, rank order, point calculation |
 | Deck.test.ts          | 17    | 1-deck/2-deck build, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
 | Dealer.test.ts        | 16    | Hand distribution per player count, firstBidderSeatIndex, nextAnticlockwise |
 | AIPlayer.test.ts      | 12    | decideBid range (4p 14–28 / 6p 28–56), trump selection, decidePlay strategy |
-| GameEngine.test.ts    | 43    | createGame (4p/6p/8p) → startBidding → placeBid → playCard → scoreRoundAndAdvance, round point totals |
-| **Total**             | **157** | |
+| GameEngine.test.ts    | 62    | createGame (4p/6p/8p), bidding, playing, end game (A/B wins, double/56 wipe-out, phase lock, winner persistence), new game reset |
+| **Total**             | **186** | |
 
 ### Coverage Report (2026-04-18)
 
