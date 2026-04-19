@@ -143,14 +143,25 @@ export class GameRoom {
 
   startGame(requestingPlayerId: string): boolean {
     const rp = this.roomPlayers.find(r => r.player.id === requestingPlayerId);
-    if (!rp?.player.isHost) return false;
-    if (!this.isFull()) return false;
+    if (!rp?.player.isHost) {
+      logger.warn({ roomId: this.id, requestingPlayerId }, 'startGame: not host');
+      return false;
+    }
+    if (!this.isFull()) {
+      logger.warn({ roomId: this.id, players: this.roomPlayers.length, required: this.settings.playerCount }, 'startGame: room not full');
+      return false;
+    }
 
     const players = this.roomPlayers
       .map(rp => rp.player)
       .sort((a, b) => a.seatIndex - b.seatIndex);
 
     this.gameState = createGame(this.id, players, this.settings.startingTables);
+    logger.info(
+      { roomId: this.id, playerCount: players.length, startingTables: this.settings.startingTables,
+        players: players.map(p => ({ id: p.id, seat: p.seatIndex, team: p.teamId, isAI: p.isAI })) },
+      'Game created',
+    );
     this.broadcastGameState();
 
     // Trigger deal animation then auto-advance to bidding
@@ -158,6 +169,7 @@ export class GameRoom {
       if (!this.gameState) return;
       const result = startBidding(this.gameState);
       this.gameState = result.state;
+      logger.info({ roomId: this.id }, 'Bidding started');
       this.broadcastGameState();
       this.scheduleAITurnIfNeeded();
     }, 2000);
@@ -167,9 +179,23 @@ export class GameRoom {
 
   handleBid(playerId: string, input: PlaceBidInput): string | null {
     if (!this.gameState) return 'NO_GAME';
+
+    const log = logger.child({ roomId: this.id, roundNumber: this.gameState.roundNumber });
+    log.debug({ playerId, bidType: input.type, amount: input.amount, trump: input.trump }, 'handleBid');
+
     const result = placeBid(this.gameState, playerId, input);
-    if (result.error) return result.error;
+    if (result.error) {
+      log.warn({ playerId, bidType: input.type, amount: input.amount, error: result.error }, 'Bid engine error');
+      return result.error;
+    }
+
     this.gameState = result.state;
+    log.info(
+      { playerId, bidType: input.type, amount: input.amount, trump: input.trump,
+        phase: this.gameState.phase, nextBidder: this.gameState.biddingState.currentBidderSeatIndex },
+      'Bid accepted',
+    );
+
     this.broadcastGameState();
     this.scheduleAITurnIfNeeded();
     return null;
@@ -177,13 +203,24 @@ export class GameRoom {
 
   handlePlayCard(playerId: string, cardId: string): string | null {
     if (!this.gameState) return 'NO_GAME';
+
+    const log = logger.child({ roomId: this.id, roundNumber: this.gameState.roundNumber });
+    log.debug({ playerId, cardId }, 'handlePlayCard');
+
     const result = playCard(this.gameState, playerId, cardId);
-    if (result.error) return result.error;
+    if (result.error) {
+      log.warn({ playerId, cardId, error: result.error }, 'Play engine error');
+      return result.error;
+    }
+
     this.gameState = result.state;
+    const trickCount = this.gameState.tricks.length;
+    log.info({ playerId, cardId, trickCount, phase: this.gameState.phase }, 'Card played');
+
     this.broadcastGameState();
 
     if (this.gameState.phase === 'scoring') {
-      // Brief pause before showing round result
+      log.info({ trickCount }, 'Round complete — scoring in 500ms');
       setTimeout(() => this.advanceRound(), 500);
     } else {
       this.scheduleAITurnIfNeeded();
@@ -193,10 +230,20 @@ export class GameRoom {
 
   private advanceRound(): void {
     if (!this.gameState) return;
+
+    const log = logger.child({ roomId: this.id, roundNumber: this.gameState.roundNumber });
+    log.info('Advancing round');
+
     const result = scoreRoundAndAdvance(this.gameState);
     this.gameState = result.state;
 
     if (result.roundResult) {
+      log.info(
+        { bidTeam: result.roundResult.bidTeam, bidAmount: result.roundResult.bidAmount,
+          success: result.roundResult.success, tablesChange: result.roundResult.tablesChange,
+          finalPoints: result.roundResult.finalTeamPoints },
+        'Round scored',
+      );
       this.io.to(this.id).emit(SERVER_EVENTS.GAME_ROUND_COMPLETE, {
         roundSummary: result.roundResult,
         publicState: this.buildPublicState(),
@@ -204,6 +251,7 @@ export class GameRoom {
     }
 
     if (this.gameState.phase === 'complete') {
+      log.info({ winner: this.gameState.winner }, 'Game complete');
       this.io.to(this.id).emit(SERVER_EVENTS.GAME_COMPLETE, {
         winner: this.gameState.winner,
         stats: this.buildGameStats(),
@@ -219,6 +267,7 @@ export class GameRoom {
       if (!this.gameState) return;
       const bidResult = startBidding(this.gameState);
       this.gameState = bidResult.state;
+      log.info({ roundNumber: this.gameState.roundNumber }, 'Bidding started for new round');
       this.broadcastGameState();
       this.scheduleAITurnIfNeeded();
     }, 2000);
@@ -361,6 +410,10 @@ export class GameRoom {
     );
     if (!currentPlayer?.isAI) return;
 
+    logger.debug(
+      { roomId: this.id, aiPlayerId: currentPlayer.id, phase, delayMs: config.aiTurnDelayMs },
+      'Scheduling AI turn',
+    );
     setTimeout(() => this.executeAITurn(currentPlayer.id), config.aiTurnDelayMs);
   }
 
@@ -371,9 +424,11 @@ export class GameRoom {
 
     if (this.gameState.phase === 'bidding') {
       const input = decideBid(this.gameState, playerId);
+      logger.debug({ roomId: this.id, playerId, bidType: input.type, amount: input.amount }, 'AI bid decision');
       this.handleBid(playerId, input);
     } else if (this.gameState.phase === 'playing') {
       const cardId = decidePlay(this.gameState, playerId);
+      logger.debug({ roomId: this.id, playerId, cardId }, 'AI play decision');
       this.handlePlayCard(playerId, cardId);
     }
   }

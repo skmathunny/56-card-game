@@ -1,55 +1,88 @@
 import { describe, it, expect } from 'vitest';
 import { buildDeck, shuffle } from '../models/Deck';
 
-describe('buildDeck', () => {
-  it('builds 24 cards for 4-player game', () => {
-    expect(buildDeck(4)).toHaveLength(24);
+describe('buildDeck — 4-player (1 deck)', () => {
+  it('produces 24 cards', () => expect(buildDeck(4)).toHaveLength(24));
+
+  it('contains only ranks 9 10 J Q K A', () => {
+    const ranks = new Set(buildDeck(4).map(c => c.rank));
+    expect([...ranks].sort()).toEqual(['10', '9', 'A', 'J', 'K', 'Q'].sort());
   });
 
-  it('builds 24 cards for 6-player game', () => {
-    expect(buildDeck(6)).toHaveLength(24);
+  it('all 24 card IDs are unique', () => {
+    const ids = buildDeck(4).map(c => c.id);
+    expect(new Set(ids).size).toBe(24);
   });
 
-  it('builds 32 cards for 8-player game', () => {
-    expect(buildDeck(8)).toHaveLength(32);
+  it('total point value is 28', () => {
+    const total = buildDeck(4).reduce((s, c) => s + c.pointValue, 0);
+    expect(total).toBe(28);
   });
 
-  it('4-player deck contains no 7s or 8s', () => {
+  it('assigns correct point values: J=3 9=2 A=1 10=1 K=0 Q=0', () => {
     const deck = buildDeck(4);
-    expect(deck.some(c => c.rank === '7' || c.rank === '8')).toBe(false);
+    const pick = (rank: string) => deck.find(c => c.rank === rank)!;
+    expect(pick('J').pointValue).toBe(3);
+    expect(pick('9').pointValue).toBe(2);
+    expect(pick('A').pointValue).toBe(1);
+    expect(pick('10').pointValue).toBe(1);
+    expect(pick('K').pointValue).toBe(0);
+    expect(pick('Q').pointValue).toBe(0);
+  });
+});
+
+describe('buildDeck — 6-player (2 decks)', () => {
+  it('produces 48 cards', () => expect(buildDeck(6)).toHaveLength(48));
+
+  it('all 48 card IDs are unique (second copy uses _2 suffix)', () => {
+    const ids = buildDeck(6).map(c => c.id);
+    expect(new Set(ids).size).toBe(48);
   });
 
-  it('8-player deck contains 7s and 8s', () => {
-    const deck = buildDeck(8);
-    expect(deck.some(c => c.rank === '7')).toBe(true);
-    expect(deck.some(c => c.rank === '8')).toBe(true);
+  it('total point value is 56', () => {
+    const total = buildDeck(6).reduce((s, c) => s + c.pointValue, 0);
+    expect(total).toBe(56);
   });
 
-  it('assigns correct point values', () => {
-    const deck = buildDeck(4);
-    const jack = deck.find(c => c.rank === 'J')!;
-    const nine = deck.find(c => c.rank === '9')!;
-    const ace = deck.find(c => c.rank === 'A')!;
-    const ten = deck.find(c => c.rank === '10')!;
-    const king = deck.find(c => c.rank === 'K')!;
-    expect(jack.pointValue).toBe(3);
-    expect(nine.pointValue).toBe(2);
-    expect(ace.pointValue).toBe(1);
-    expect(ten.pointValue).toBe(1);
-    expect(king.pointValue).toBe(0);
+  it('contains exactly 2 copies of each suit+rank pair', () => {
+    const deck = buildDeck(6);
+    const count = (rank: string, suit: string) =>
+      deck.filter(c => c.rank === rank && c.suit === suit).length;
+    expect(count('J', 'spades')).toBe(2);
+    expect(count('9', 'hearts')).toBe(2);
+  });
+});
+
+describe('buildDeck — 8-player (2 decks)', () => {
+  it('produces 48 cards', () => expect(buildDeck(8)).toHaveLength(48));
+
+  it('all 48 card IDs are unique', () => {
+    const ids = buildDeck(8).map(c => c.id);
+    expect(new Set(ids).size).toBe(48);
+  });
+
+  it('total point value is 56', () => {
+    const total = buildDeck(8).reduce((s, c) => s + c.pointValue, 0);
+    expect(total).toBe(56);
   });
 });
 
 describe('shuffle', () => {
   it('returns same number of cards', () => {
     const deck = buildDeck(4);
-    expect(shuffle(deck)).toHaveLength(deck.length);
+    expect(shuffle(deck)).toHaveLength(24);
   });
 
-  it('does not modify the original deck', () => {
+  it('does not mutate the input array', () => {
     const deck = buildDeck(4);
     const original = [...deck];
     shuffle(deck);
     expect(deck).toEqual(original);
+  });
+
+  it('contains the same cards after shuffling', () => {
+    const deck = buildDeck(4);
+    const shuffled = shuffle(deck);
+    expect(shuffled.map(c => c.id).sort()).toEqual(deck.map(c => c.id).sort());
   });
 });

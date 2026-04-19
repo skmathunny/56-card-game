@@ -23,39 +23,49 @@ const players = [
 
 describe('scoreRound', () => {
   it('marks as success when bid team meets their bid', () => {
-    const teams = makeTeams(12, 12, 30, 0);
-    const result = scoreRound(makeBid(28), teams, players);
+    const result = scoreRound(makeBid(14), makeTeams(12, 12, 16, 0), players);
     expect(result.success).toBe(true);
   });
 
   it('marks as failure when bid team falls short', () => {
-    const teams = makeTeams(12, 12, 20, 0);
-    const result = scoreRound(makeBid(32), teams, players);
+    const result = scoreRound(makeBid(20), makeTeams(12, 12, 15, 0), players);
     expect(result.success).toBe(false);
   });
 
-  it('bid 28-39 results in 1 table change', () => {
-    const teams = makeTeams(12, 12, 30, 0);
-    const result = scoreRound(makeBid(28), teams, players);
+  it('bid 14–39 results in 1 table change on success', () => {
+    const result = scoreRound(makeBid(14), makeTeams(12, 12, 16, 0), players);
     expect(result.tablesChange).toBe(1);
   });
 
-  it('bid 40-47 results in 2 tables change', () => {
-    const teams = makeTeams(12, 12, 42, 0);
-    const result = scoreRound(makeBid(40), teams, players);
+  it('bid 40–47 results in 2 table change on success', () => {
+    const result = scoreRound(makeBid(40), makeTeams(12, 12, 42, 0), players);
     expect(result.tablesChange).toBe(2);
   });
 
-  it('bid 56 results in 4 tables change', () => {
-    const teams = makeTeams(12, 12, 56, 0);
-    const result = scoreRound(makeBid(56), teams, players);
+  it('bid 48–55 results in 3 table change on success', () => {
+    const result = scoreRound(makeBid(48), makeTeams(12, 12, 50, 0), players);
+    expect(result.tablesChange).toBe(3);
+  });
+
+  it('bid 56 results in 4 table change on success', () => {
+    const result = scoreRound(makeBid(56), makeTeams(12, 12, 56, 0), players);
     expect(result.tablesChange).toBe(4);
   });
 
-  it('doubled bid doubles the payout', () => {
-    const teams = makeTeams(12, 12, 30, 0);
-    const result = scoreRound(makeBid(28, 'p0', 'double'), teams, players);
+  it('doubled bid doubles the table change', () => {
+    const result = scoreRound(makeBid(14, 'p0', 'double'), makeTeams(12, 12, 16, 0), players);
     expect(result.tablesChange).toBe(2);
+  });
+
+  it('failure table change is negative', () => {
+    const result = scoreRound(makeBid(20), makeTeams(12, 12, 15, 0), players);
+    expect(result.tablesChange).toBeLessThan(0);
+  });
+
+  it('captures finalTeamPoints before reset', () => {
+    const result = scoreRound(makeBid(14), makeTeams(12, 12, 16, 12), players);
+    expect(result.finalTeamPoints.A).toBe(16);
+    expect(result.finalTeamPoints.B).toBe(12);
   });
 });
 
