@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Animated,
   ScrollView,
@@ -18,6 +19,7 @@ import { useTransport } from '../services/transportContext';
 import { useGameStore } from '../store/gameSlice';
 import { useLobbyStore } from '../store/lobbySlice';
 import { SUIT_SYMBOLS } from '../constants/cards';
+import { getCardImage, getDeckTheme } from '../decks/deckRegistry';
 import type { Suit } from '../constants/cards';
 import type { PublicPlayer } from '../store/gameSlice';
 
@@ -109,7 +111,9 @@ export default function DealAndBidScreen() {
   const navigation = useNavigation<Nav>();
   const transport  = useTransport();
   const { gameState, myHand } = useGameStore();
-  const { myPlayerId }        = useLobbyStore();
+  const { myPlayerId, settings } = useLobbyStore();
+  const deckId = settings?.deckId;
+  const deckTheme = getDeckTheme(deckId);
 
   const [selectedAmount, setSelectedAmount] = useState(() => {
     const pc = useGameStore.getState().gameState?.playerCount ?? 4;
@@ -269,19 +273,30 @@ export default function DealAndBidScreen() {
         <Text style={styles.handLabel}>Your hand</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hand}>
           {myHand.map((card, i) => {
-            const isRed = card.suit === 'hearts' || card.suit === 'diamonds';
-            const anim  = cardAnims.current[i] ?? new Animated.Value(0);
+            const isRed    = card.suit === 'hearts' || card.suit === 'diamonds';
+            const anim     = cardAnims.current[i] ?? new Animated.Value(0);
+            const imgSrc   = getCardImage(deckId, card.id);
             return (
               <Animated.View
                 key={card.id}
                 style={[styles.card, { width: cardWidth, height: cardHeight, transform: [{ translateY: anim }] }]}
               >
-                <Text style={[styles.cardRank, { color: isRed ? Colors.red : '#1a1a2e', fontSize: cardHeight * 0.16 }]}>
-                  {card.rank}
-                </Text>
-                <Text style={[styles.cardSuit, { color: isRed ? Colors.red : '#1a1a2e', fontSize: cardHeight * 0.22 }]}>
-                  {SUIT_SYMBOLS[card.suit]}
-                </Text>
+                {imgSrc ? (
+                  <Image
+                    source={imgSrc}
+                    style={{ width: cardWidth, height: cardHeight, borderRadius: Radius.md }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <>
+                    <Text style={[styles.cardRank, { color: isRed ? Colors.red : deckTheme.rankColor.black, fontSize: cardHeight * 0.16 }]}>
+                      {card.rank}
+                    </Text>
+                    <Text style={[styles.cardSuit, { color: isRed ? Colors.red : deckTheme.rankColor.black, fontSize: cardHeight * 0.22 }]}>
+                      {SUIT_SYMBOLS[card.suit]}
+                    </Text>
+                  </>
+                )}
               </Animated.View>
             );
           })}

@@ -78,7 +78,9 @@ npm test -- --reporter=verbose  # verbose per-test output
 npm test -- --coverage          # with V8 coverage report
 ```
 
-**Test results (2026-04-18): 130 / 130 passing across 7 suites, 0 failures.**
+**Test results (2026-04-19): 130 / 130 server · 19 / 19 app — 149 total, 0 failures.**
+
+#### Server (fifty-six-server) — Vitest
 
 | Suite                 | Tests | Covers |
 |-----------------------|-------|--------|
@@ -90,7 +92,18 @@ npm test -- --coverage          # with V8 coverage report
 | AIPlayer.test.ts      | 12    | Bid range per playerCount, trump selection, play strategy |
 | GameEngine.test.ts    | 36    | Full lifecycle: createGame → bidding → playing → scoring → winner |
 
-### Engine Layer Coverage
+#### App (fifty-six-app) — Vitest
+
+```bash
+npm test              # run all 19 unit tests
+npm run test:coverage # with V8 coverage report
+```
+
+| Suite                  | Tests | Covers |
+|------------------------|-------|--------|
+| deckRegistry.test.ts   | 19    | getDeckTheme fallback, getCardImage _2-suffix stripping, getCardBackImage, DECK_CONFIGS shape |
+
+### Engine Layer Coverage (server)
 
 ```
 File               | % Stmts | % Branch | % Funcs | % Lines
@@ -102,6 +115,14 @@ ScoringEngine.ts   |  100.00 |    85.18 |  100.00 | 100.00
 TrickEngine.ts     |  100.00 |    90.69 |  100.00 | 100.00
 Card.ts / Deck.ts  |  100.00 |   100.00 |  100.00 | 100.00
 AIPlayer.ts        |   97.50 |    85.71 |  100.00 |  97.50
+```
+
+### App Deck Registry Coverage
+
+```
+File             | % Stmts | % Branch | % Funcs | % Lines
+-----------------|---------|----------|---------|--------
+deckRegistry.ts  |  100.00 |   100.00 |  100.00 | 100.00
 ```
 
 > The socket/room layer requires a live Socket.io server; it is excluded from unit coverage. See [fifty-six-server/README.md](fifty-six-server/README.md) for the full coverage table with uncovered line annotations.
@@ -214,6 +235,17 @@ All 33 user stories and ~90 test case issues are tracked on the [GitHub project 
 ---
 
 ## Recent Changes
+
+### 2026-04-19 — Modular card deck system with image support
+
+**Features**
+- Image-based card decks: `CardView` and `DealAndBidScreen` render real card images; text/symbol rendering is the automatic fallback on error
+- Modular deck registry: `src/decks/deckRegistry.ts` exposes `getCardImage`, `getCardBackImage`, and `getDeckTheme`; image maps use static `require()` to satisfy Metro bundler
+- Four decks shipped: **Classic** and **Orthodox** have real card art extracted from spritesheets; **Royal** and **Minimal** use placeholder PNGs (replace files to upgrade without code changes)
+- Deck selector in room settings now uses `DECK_CONFIGS` from `deckConfig.json` — add a new deck by editing the JSON and running a script
+- `scripts/extract-cards.js` — crops individual card images from a 13×4 or 13×5 spritesheet; auto-detects cell size, supports configurable row count and suit order via CLI args
+- `scripts/generate-card-assets.js` — generates placeholder PNGs and TypeScript image maps for all registered decks
+- App test suite (Vitest): 19 tests, 100% coverage of `deckRegistry.ts`
 
 ### 2026-04-18 — Game rule fixes, logging, UI overhaul, test expansion
 

@@ -12,7 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../constants/theme';
 import { SERVER_URL } from '../constants/game';
-import { DECK_THEMES, DEFAULT_DECK_ID } from '../decks/deckRegistry';
+import { DECK_CONFIGS, DEFAULT_DECK_ID } from '../decks/deckRegistry';
 import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
 import { useTransport } from '../services/transportContext';
@@ -154,14 +154,14 @@ export default function CreateRoomScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Card Deck</Text>
           <View style={styles.timerRow}>
-            {Object.values(DECK_THEMES).map((deck) => (
+            {DECK_CONFIGS.map((deck) => (
               <TouchableOpacity
                 key={deck.id}
                 style={[styles.timerBtn, deckId === deck.id && styles.timerBtnActive]}
                 onPress={() => setDeckId(deck.id)}
               >
                 <Text style={[styles.timerText, deckId === deck.id && styles.timerTextActive]}>
-                  {deck.name}
+                  {deck.emoji} {deck.name}
                 </Text>
               </TouchableOpacity>
             ))}

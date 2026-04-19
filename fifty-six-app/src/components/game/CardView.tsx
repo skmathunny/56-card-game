@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '../../constants/cards';
 import { SUIT_SYMBOLS } from '../../constants/cards';
 import { Colors, Radius, FontSize, FontWeight, Spacing } from '../../constants/theme';
 import { useLobbyStore } from '../../store/lobbySlice';
-import { getDeckTheme } from '../../decks/deckRegistry';
+import { getDeckTheme, getCardImage, getCardBackImage } from '../../decks/deckRegistry';
 
 interface CardViewProps {
   card: Card;
@@ -24,16 +24,53 @@ const SIZES = {
 export function CardView({ card, selected, legal = true, onPress, size = 'md', faceDown }: CardViewProps) {
   const deckId = useLobbyStore(s => s.settings?.deckId);
   const theme  = getDeckTheme(deckId);
+  const dims   = SIZES[size];
 
-  const isRed    = card.suit === 'hearts' || card.suit === 'diamonds';
-  const textColor = isRed ? theme.rankColor.red : theme.rankColor.black;
-  const dims     = SIZES[size];
+  const [imageFailed, setImageFailed] = useState(false);
 
   if (faceDown) {
+    const backImage = getCardBackImage(deckId);
+    if (backImage && !imageFailed) {
+      return (
+        <Image
+          source={backImage}
+          style={[styles.card, dims]}
+          onError={() => setImageFailed(true)}
+        />
+      );
+    }
     return (
       <View style={[styles.card, dims, { backgroundColor: theme.cardBack, borderColor: theme.cardBack }]} />
     );
   }
+
+  const cardImage = getCardImage(deckId, card.id);
+  if (cardImage && !imageFailed) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={!onPress}
+        activeOpacity={0.85}
+        style={[
+          styles.imageCard,
+          dims,
+          selected && styles.cardSelected,
+          !legal && styles.cardIllegal,
+        ]}
+      >
+        <Image
+          source={cardImage}
+          style={[styles.cardImage, dims]}
+          onError={() => setImageFailed(true)}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
+    );
+  }
+
+  // Text fallback
+  const isRed    = card.suit === 'hearts' || card.suit === 'diamonds';
+  const textColor = isRed ? theme.rankColor.red : theme.rankColor.black;
 
   return (
     <TouchableOpacity
@@ -73,6 +110,18 @@ const styles = StyleSheet.create({
     shadowOpacity:   0.25,
     shadowRadius:    4,
     elevation:       4,
+  },
+  imageCard: {
+    borderRadius:  Radius.md,
+    overflow:      'hidden',
+    shadowColor:   '#000',
+    shadowOffset:  { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius:  4,
+    elevation:     4,
+  },
+  cardImage: {
+    borderRadius: Radius.md,
   },
   cardSelected: {
     borderColor:   Colors.accent,

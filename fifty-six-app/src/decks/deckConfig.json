@@ -1,0 +1,28 @@
+{
+  "decks": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "emoji": "🃏",
+      "description": "Traditional white card deck"
+    },
+    {
+      "id": "royal",
+      "name": "Royal",
+      "emoji": "👑",
+      "description": "Elegant dark royal theme"
+    },
+    {
+      "id": "minimal",
+      "name": "Minimal",
+      "emoji": "◻",
+      "description": "Clean minimalist style"
+    },
+    {
+      "id": "orthodox",
+      "name": "Orthodox",
+      "emoji": "🎴",
+      "description": "Traditional orthodox card design"
+    }
+  ]
+}
