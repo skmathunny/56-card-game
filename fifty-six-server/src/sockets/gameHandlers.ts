@@ -56,7 +56,6 @@ export function registerGameHandlers(socket: Socket, roomManager: RoomManager): 
       return ack?.({ error: 'NOT_IN_ROOM' });
     }
 
-    log.info({ event: 'PLACE_BID', pid, roomId: r.id, amount: parsed.data.amount, trump: parsed.data.trump }, 'Bid placed');
     const error = r.handleBid(pid, {
       playerId: pid,
       type: 'bid',
@@ -65,9 +64,10 @@ export function registerGameHandlers(socket: Socket, roomManager: RoomManager): 
     });
 
     if (error) {
-      log.warn({ event: 'PLACE_BID', pid, roomId: r.id, error }, 'Bid rejected by engine');
+      log.warn({ event: 'PLACE_BID', pid, roomId: r.id, amount: parsed.data.amount, trump: parsed.data.trump, error }, 'Bid rejected by engine');
       return ack?.({ error });
     }
+    log.info({ event: 'PLACE_BID', pid, roomId: r.id, amount: parsed.data.amount, trump: parsed.data.trump }, 'Bid accepted');
     ack?.({ success: true });
   });
 

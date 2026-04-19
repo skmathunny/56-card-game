@@ -111,7 +111,10 @@ export default function DealAndBidScreen() {
   const { gameState, myHand } = useGameStore();
   const { myPlayerId }        = useLobbyStore();
 
-  const [selectedAmount, setSelectedAmount] = useState(14);
+  const [selectedAmount, setSelectedAmount] = useState(() => {
+    const pc = useGameStore.getState().gameState?.playerCount ?? 4;
+    return pc === 4 ? 14 : 28;
+  });
   const [selectedTrump,  setSelectedTrump]  = useState('spades');
   const [acting, setActing]                 = useState(false);
   const [handHeight, setHandHeight]         = useState(0);
