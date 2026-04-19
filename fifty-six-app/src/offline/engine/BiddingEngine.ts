@@ -3,9 +3,10 @@ import { Bid, BidType, BiddingState } from '../models/Bid';
 import { TrumpSuit } from '../models/Card';
 import { nextAnticlockwise } from './Dealer';
 
-const MIN_BID = 28;
-const MAX_BID = 56;
 const DEFAULT_CONVENTION = 'number-first';
+
+function minBid(playerCount: number): number { return playerCount === 4 ? 14 : 28; }
+function maxBid(playerCount: number): number { return playerCount === 4 ? 28 : 56; }
 
 export interface PlaceBidInput {
   playerId: string;
@@ -43,7 +44,7 @@ export function validateBid(
 
   if (input.type === 'bid') {
     const amount = input.amount ?? 0;
-    if (amount < MIN_BID || amount > MAX_BID) return 'BID_OUT_OF_RANGE';
+    if (amount < minBid(playerCount) || amount > maxBid(playerCount)) return 'BID_OUT_OF_RANGE';
     if (state.currentHighBid && state.currentHighBid.amount !== null && amount <= state.currentHighBid.amount) {
       return 'BID_TOO_LOW';
     }
@@ -100,13 +101,13 @@ export function applyBid(
 
 // Returns the winning bid, falling back to a forced minimum if all passed.
 // forcedPlayerId should be the dealer's player ID; trump defaults to no-trumps.
-export function resolveWinningBid(state: BiddingState, forcedPlayerId: string): Bid {
+export function resolveWinningBid(state: BiddingState, forcedPlayerId: string, playerCount: number): Bid {
   if (state.currentHighBid) return state.currentHighBid;
 
   return {
     id: uuid(),
     playerId: forcedPlayerId,
-    amount: MIN_BID,
+    amount: minBid(playerCount),
     trump: 'no-trumps',
     type: 'bid',
     conventionId: DEFAULT_CONVENTION,

@@ -97,7 +97,7 @@ export default function RoundSummaryScreen() {
             {(['A', 'B'] as const).map((team) => (
               <View key={team} style={styles.pointsTeam}>
                 <Text style={[styles.pointsTeamLabel, { color: TEAM_COLORS[team] }]}>Team {team}</Text>
-                <Text style={styles.pointsValue}>{gameState.teams[team].roundPoints}</Text>
+                <Text style={styles.pointsValue}>{roundSummary.finalTeamPoints[team]}</Text>
               </View>
             ))}
           </View>

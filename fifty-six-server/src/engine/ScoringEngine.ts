@@ -9,6 +9,7 @@ export interface RoundResult {
   tablesChange: number;
   doubled: boolean;
   redoubled: boolean;
+  finalTeamPoints: { A: number; B: number };
 }
 
 export function scoreRound(
@@ -34,7 +35,8 @@ export function scoreRound(
     ? baseTablesChange * multiplier
     : -(baseTablesChange + 1) * multiplier;
 
-  return { bidTeam, bidAmount, bidTeamPoints, success, tablesChange, doubled, redoubled };
+  return { bidTeam, bidAmount, bidTeamPoints, success, tablesChange, doubled, redoubled,
+           finalTeamPoints: { A: teams.A.roundPoints, B: teams.B.roundPoints } };
 }
 
 export function applyRoundResult(

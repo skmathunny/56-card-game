@@ -29,7 +29,11 @@ const TRUMP_OPTIONS: Array<{ label: string; value: string }> = [
   { label: 'NT', value: 'no-trumps' },
 ];
 
-const BID_AMOUNTS = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56];
+function buildBidAmounts(playerCount: number): number[] {
+  const min = playerCount === 4 ? 14 : 28;
+  const max = playerCount === 4 ? 28 : 56;
+  return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+}
 
 export default function DealAndBidScreen() {
   const navigation = useNavigation<Nav>();
@@ -37,7 +41,7 @@ export default function DealAndBidScreen() {
   const { gameState, myHand } = useGameStore();
   const { myPlayerId }        = useLobbyStore();
 
-  const [selectedAmount, setSelectedAmount] = useState(28);
+  const [selectedAmount, setSelectedAmount] = useState(14);
   const [selectedTrump,  setSelectedTrump]  = useState('spades');
   const [acting, setActing]                 = useState(false);
 
@@ -77,8 +81,10 @@ export default function DealAndBidScreen() {
     gameState.phase === 'bidding' &&
     gameState.players[gameState.biddingState.currentBidderSeatIndex]?.id === myPlayerId;
 
+  const BID_AMOUNTS  = buildBidAmounts(gameState.playerCount);
+  const baseBid      = gameState.playerCount === 4 ? 14 : 28;
   const highBid      = gameState.biddingState.currentHighBid;
-  const minBid       = highBid ? (highBid.amount ?? 28) + 1 : 28;
+  const minBid       = highBid ? (highBid.amount ?? baseBid) + 1 : baseBid;
   const validAmounts = BID_AMOUNTS.filter((a) => a >= minBid);
 
   // Keep selectedAmount at or above the current minimum

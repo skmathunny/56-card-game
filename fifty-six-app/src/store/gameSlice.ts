@@ -73,6 +73,7 @@ export interface RoundSummary {
   tablesChange: number;
   doubled: boolean;
   redoubled: boolean;
+  finalTeamPoints: { A: number; B: number };
 }
 
 export interface RoundHistoryEntry extends RoundSummary {

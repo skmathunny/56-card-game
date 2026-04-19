@@ -66,7 +66,7 @@ export function placeBid(state: GameState, playerId: string, input: PlaceBidInpu
 
   if (newBiddingState.isComplete) {
     const dealer = state.players.find(p => p.seatIndex === state.dealerSeatIndex);
-    const winningBid = resolveWinningBid(newBiddingState, dealer?.id ?? state.players[0].id);
+    const winningBid = resolveWinningBid(newBiddingState, dealer?.id ?? state.players[0].id, state.playerCount);
     const bidder = state.players.find(p => p.id === winningBid.playerId);
     return {
       state: {
@@ -125,8 +125,8 @@ export function playCard(state: GameState, playerId: string, cardId: string): Ga
       },
     };
 
-    // 4-player: 24 cards / 4 per trick = 6 tricks; 6 and 8-player: 4 tricks
-    const totalTricks = state.playerCount === 4 ? 6 : 4;
+    const deckSize = state.playerCount === 4 ? 24 : 48;
+    const totalTricks = deckSize / state.playerCount;
     if (tricks.length === totalTricks) {
       return {
         state: {
