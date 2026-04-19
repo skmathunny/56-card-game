@@ -33,9 +33,8 @@ export default function EndGameScreen() {
   const [showHistory, setShowHistory] = useState(false);
   const lastRound = roundHistory.length > 0 ? roundHistory[roundHistory.length - 1] : null;
 
-  const handleRematch = async () => {
-    if (!roomId) return;
-    // Rematch: host triggers a new game in the same room → goes to waiting room
+  const handleRematch = () => {
+    clearGame();
     navigation.replace(ROUTES.WAITING_ROOM);
   };
 

@@ -17,6 +17,7 @@ import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
 import { useTransport } from '../services/transportContext';
 import { useLobbyStore, RoomPlayer } from '../store/lobbySlice';
+import { useGameStore } from '../store/gameSlice';
 import { SERVER_EVENTS } from '../constants/events';
 
 type Nav = NativeStackNavigationProp<any>;
@@ -27,8 +28,16 @@ export default function WaitingRoomScreen() {
   const navigation  = useNavigation<Nav>();
   const transport   = useTransport();
   const { roomCode, roomId, settings, players, myPlayerId, isHost, setPlayers } = useLobbyStore();
+  const { gameState } = useGameStore();
 
   const [starting, setStarting] = useState(false);
+
+  // Auto-navigate all players (not just the host) when the game starts
+  useEffect(() => {
+    if (gameState?.phase === 'dealing' || gameState?.phase === 'bidding') {
+      navigation.replace(ROUTES.DEAL_AND_BID);
+    }
+  }, [gameState?.phase]);
 
   const requiredPlayers = settings?.playerCount ?? 4;
   const filledSeats     = players.length;
@@ -62,7 +71,7 @@ export default function WaitingRoomScreen() {
     setStarting(true);
     try {
       await transport.startGame({ roomId });
-      navigation.replace(ROUTES.DEAL_AND_BID);
+      // Navigation handled by the gameState effect when GAME_STATE_UPDATED arrives
     } catch (e: any) {
       Alert.alert('Error', e?.message ?? 'Could not start game');
       setStarting(false);
