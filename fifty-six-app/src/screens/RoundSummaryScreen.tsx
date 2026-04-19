@@ -21,8 +21,11 @@ export default function RoundSummaryScreen() {
   const handleContinue = () => {
     clearRoundSummary();
     setRoundSummaryVisible(false);
-    // Server will push next round's dealing state; navigate back to deal screen
-    navigation.replace(ROUTES.DEAL_AND_BID);
+    if (gameState?.phase === 'complete') {
+      navigation.replace(ROUTES.END_GAME);
+    } else {
+      navigation.replace(ROUTES.DEAL_AND_BID);
+    }
   };
 
   if (!roundSummary || !gameState) {

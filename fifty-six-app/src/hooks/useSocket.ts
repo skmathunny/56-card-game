@@ -14,8 +14,9 @@ export function useSocket() {
       setGameState(data.publicState, data.privateHand);
     };
 
-    const onRoundComplete = (data: { roundSummary: any }) => {
+    const onRoundComplete = (data: { roundSummary: any; publicState?: any }) => {
       setRoundSummary(data.roundSummary);
+      if (data.publicState) setGameState(data.publicState, []);
       setRoundSummaryVisible(true);
     };
 

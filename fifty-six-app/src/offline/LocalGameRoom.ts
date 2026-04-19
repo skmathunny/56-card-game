@@ -143,7 +143,9 @@ export class LocalGameRoom {
     this.gameState = result.state;
 
     if (result.roundResult) {
-      this.emit(EV.GAME_ROUND_COMPLETE, { roundSummary: result.roundResult });
+      const { players, ...rest } = this.gameState;
+      const publicState = { ...rest, players: players.map(({ hand, ...pub }) => pub) };
+      this.emit(EV.GAME_ROUND_COMPLETE, { roundSummary: result.roundResult, publicState });
     }
 
     if (this.gameState.phase === 'complete') {
