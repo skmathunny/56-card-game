@@ -31,10 +31,13 @@ export function decideBid(state: GameState, playerId: string): PlaceBidInput {
   const player = state.players.find(p => p.id === playerId)!;
   const trump = bestTrumpSuit(player.hand);
   const strength = evaluateHand(player.hand, trump);
-  const currentAmount = state.biddingState.currentHighBid?.amount ?? 27;
 
-  // Bid based on hand strength relative to current high bid
-  const bidAmount = 28 + Math.floor(strength / 2);
+  const minBid = state.playerCount === 4 ? 14 : 28;
+  const maxBid = state.playerCount === 4 ? 28 : 56;
+  const currentAmount = state.biddingState.currentHighBid?.amount ?? (minBid - 1);
+
+  // Scale bid from minBid upward based on hand strength
+  const bidAmount = minBid + Math.floor(strength / 2);
 
   if (bidAmount <= currentAmount) {
     return { playerId, type: 'pass' };
@@ -43,7 +46,7 @@ export function decideBid(state: GameState, playerId: string): PlaceBidInput {
   return {
     playerId,
     type: 'bid',
-    amount: Math.min(bidAmount, 56),
+    amount: Math.min(bidAmount, maxBid),
     trump,
   };
 }
