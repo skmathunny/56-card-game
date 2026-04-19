@@ -78,7 +78,7 @@ npm test -- --reporter=verbose  # verbose per-test output
 npm test -- --coverage          # with V8 coverage report
 ```
 
-**Test results (2026-04-19): 130 / 130 server · 19 / 19 app — 149 total, 0 failures.**
+**Test results (2026-04-19): 132 / 132 server · 19 / 19 app — 151 total, 0 failures.**
 
 #### Server (fifty-six-server) — Vitest
 
@@ -87,7 +87,7 @@ npm test -- --coverage          # with V8 coverage report
 | BiddingEngine.test.ts | 24    | Bid range (4p: 14–28, 6p: 28–56), turn order, double/redouble, all-pass |
 | ScoringEngine.test.ts | 15    | Success/failure, table changes, doubles, finalTeamPoints snapshot |
 | TrickEngine.test.ts   | 11    | Play validation, trump resolution, point calculation |
-| Deck.test.ts          | 11    | 1-deck/2-deck, unique IDs, point totals, shuffle immutability |
+| Deck.test.ts          | 13    | 1-deck/2-deck, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
 | Dealer.test.ts        | 16    | Hand distribution, firstBidder, nextAnticlockwise wrapping |
 | AIPlayer.test.ts      | 12    | Bid range per playerCount, trump selection, play strategy |
 | GameEngine.test.ts    | 36    | Full lifecycle: createGame → bidding → playing → scoring → winner |
@@ -175,14 +175,14 @@ npm start                 # start Expo dev server
 
 ## Key Engine Rules
 
-| Players | Decks | Cards each | Tricks | Bid range |
-|---------|-------|------------|--------|-----------|
-| 4       | 1     | 6          | 6      | 14 – 28   |
-| 6       | 2     | 8          | 8      | 28 – 56   |
-| 8       | 2     | 6          | 6      | 28 – 56   |
+| Players | Decks | Ranks used         | Cards each | Tricks | Bid range |
+|---------|-------|--------------------|------------|--------|-----------|
+| 4       | 1     | J 9 A 10 K Q       | 6          | 6      | 14 – 28   |
+| 6       | 2     | J 9 A 10 K Q       | 8          | 8      | 28 – 56   |
+| 8       | 2     | J 9 A 10 K Q 8 7   | 8          | 8      | 28 – 56   |
 
 - **Bidding:** player-count-aware min/max. All-pass → dealer forced to minimum bid with no-trumps. Consecutive passes required: N−1 after a bid on the table, N for full all-pass.
-- **Tricks:** follow-suit enforced; off-suit only legal when void. Trump beats led suit; J > 9 > A > 10 > K > Q within each suit.
+- **Tricks:** follow-suit enforced; off-suit only legal when void. Trump beats led suit; J > 9 > A > 10 > K > Q > 8 > 7 within each suit. 7 and 8 are zero-point cards present only in 8-player games.
 - **Scoring:** bid 14–39 → 1 table, 40–47 → 2 tables, 48–55 → 3 tables, 56 → 4 tables. Double ×2, Redouble ×4. Failure: bid team loses (base + 1) × multiplier tables.
 - **Winning:** a team wins when the opposing team reaches 0 tables.
 

@@ -53,17 +53,35 @@ describe('buildDeck — 6-player (2 decks)', () => {
   });
 });
 
-describe('buildDeck — 8-player (2 decks)', () => {
-  it('produces 48 cards', () => expect(buildDeck(8)).toHaveLength(48));
-
-  it('all 48 card IDs are unique', () => {
-    const ids = buildDeck(8).map(c => c.id);
-    expect(new Set(ids).size).toBe(48);
+describe('buildDeck — 8-player (2 decks, 8 ranks)', () => {
+  it('produces 64 cards (8 ranks × 4 suits × 2 decks)', () => {
+    expect(buildDeck(8)).toHaveLength(64);
   });
 
-  it('total point value is 56', () => {
+  it('contains ranks 7 and 8 in addition to the standard 6', () => {
+    const ranks = new Set(buildDeck(8).map(c => c.rank));
+    expect(ranks.has('7')).toBe(true);
+    expect(ranks.has('8')).toBe(true);
+    expect([...ranks].sort()).toEqual(['10', '7', '8', '9', 'A', 'J', 'K', 'Q'].sort());
+  });
+
+  it('all 64 card IDs are unique (second copy uses _2 suffix)', () => {
+    const ids = buildDeck(8).map(c => c.id);
+    expect(new Set(ids).size).toBe(64);
+  });
+
+  it('total point value is 56 (7 and 8 are worth 0 pts)', () => {
     const total = buildDeck(8).reduce((s, c) => s + c.pointValue, 0);
     expect(total).toBe(56);
+  });
+
+  it('contains exactly 2 copies of each suit+rank pair', () => {
+    const deck = buildDeck(8);
+    const count = (rank: string, suit: string) =>
+      deck.filter(c => c.rank === rank && c.suit === suit).length;
+    expect(count('7', 'spades')).toBe(2);
+    expect(count('8', 'hearts')).toBe(2);
+    expect(count('J', 'clubs')).toBe(2);
   });
 });
 

@@ -12,17 +12,18 @@ Node.js/TypeScript game server for the 56 card game (South Asian trick-taking ga
 
 ## Game Rules Summary
 
-| Players | Decks | Cards dealt | Tricks | Bid range |
-|---------|-------|-------------|--------|-----------|
-| 4       | 1     | 6 each      | 6      | 14 – 28   |
-| 6       | 2     | 8 each      | 8      | 28 – 56   |
-| 8       | 2     | 6 each      | 6      | 28 – 56   |
+| Players | Decks | Ranks used          | Cards dealt | Tricks | Bid range |
+|---------|-------|---------------------|-------------|--------|-----------|
+| 4       | 1     | J 9 A 10 K Q        | 6 each      | 6      | 14 – 28   |
+| 6       | 2     | J 9 A 10 K Q        | 8 each      | 8      | 28 – 56   |
+| 8       | 2     | J 9 A 10 K Q 8 7    | 8 each      | 8      | 28 – 56   |
 
 - Teams of 2 (4p) or 3 (6/8p): Team A vs Team B
 - Bidding is anticlockwise; winner names trump and leads the first trick
-- Rank order: J (highest) > 9 > A > 10 > K > Q (lowest)
-- Point values: J = 3 pts, 9 = 2 pts, A = 1 pt, 10 = 1 pt, K/Q = 0 pts
-- Total points per deck: 28 (4p), 56 (6p/8p)
+- Rank order: J (highest) > 9 > A > 10 > K > Q > 8 > 7 (lowest)
+- Point values: J = 3 pts, 9 = 2 pts, A = 1 pt, 10 = 1 pt, K/Q/8/7 = 0 pts
+- Total points per round: 28 (4p, 1 deck) · 56 (6p/8p, 2 decks)
+- 7 and 8 are zero-point cards included only in 8-player games to fill 64 cards (8 ranks × 4 suits × 2 decks)
 - Double/Redouble multiplies table stakes by ×2 / ×4
 - All-pass: dealer is forced to play at minimum bid with no-trumps
 - Tables won/lost per round depend on bid amount (see `ScoringEngine.ts`)
@@ -62,12 +63,12 @@ npm test -- --reporter=verbose  # verbose per-test output
 npm test -- --coverage          # with V8 coverage report
 ```
 
-### Test Results (2026-04-18)
+### Test Results (2026-04-19)
 
 ```
  Test Files  7 passed (7)
-      Tests  130 passed (130)
-   Duration  ~724ms
+      Tests  132 passed (132)
+   Duration  ~707ms
 ```
 
 | Test file             | Tests | What is covered |
@@ -75,11 +76,11 @@ npm test -- --coverage          # with V8 coverage report
 | BiddingEngine.test.ts | 24    | Bid range (4p/6p), turn order, raise/double/redouble, all-pass completion |
 | ScoringEngine.test.ts | 15    | Success/failure, table tiers, doubles, finalTeamPoints snapshot |
 | TrickEngine.test.ts   | 11    | Play validation, trump resolution, rank order, point calculation |
-| Deck.test.ts          | 11    | 1-deck/2-deck build, unique IDs, point totals, shuffle immutability |
+| Deck.test.ts          | 13    | 1-deck/2-deck build, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
 | Dealer.test.ts        | 16    | Hand distribution per player count, firstBidderSeatIndex, nextAnticlockwise |
 | AIPlayer.test.ts      | 12    | decideBid range (4p 14–28 / 6p 28–56), trump selection, decidePlay strategy |
 | GameEngine.test.ts    | 36    | createGame → startBidding → placeBid → playCard → scoreRoundAndAdvance |
-| **Total**             | **130** | |
+| **Total**             | **132** | |
 
 ### Coverage Report (2026-04-18)
 

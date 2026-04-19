@@ -25,10 +25,10 @@ describe('dealHands', () => {
     players.forEach(p => expect(hands[p.id]).toHaveLength(8));
   });
 
-  it('8-player: each player gets 6 cards', () => {
+  it('8-player: each player gets 8 cards (64 cards ÷ 8 players)', () => {
     const players = makePlayers(8);
     const hands = dealHands(8, players);
-    players.forEach(p => expect(hands[p.id]).toHaveLength(6));
+    players.forEach(p => expect(hands[p.id]).toHaveLength(8));
   });
 
   it('4-player: all 24 card IDs are unique across all hands', () => {
