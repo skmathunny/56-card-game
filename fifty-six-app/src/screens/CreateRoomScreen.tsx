@@ -35,6 +35,7 @@ export default function CreateRoomScreen() {
   const [playerCount, setPlayerCount]   = useState<PlayerCount>(4);
   const [tables, setTables]             = useState(7);
   const [bidTimer, setBidTimer]         = useState(30);
+  const [playTimer, setPlayTimer]       = useState(30);
   const [deckId, setDeckId]             = useState(DEFAULT_DECK_ID);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
@@ -54,6 +55,7 @@ export default function CreateRoomScreen() {
           playerCount,
           startingTables:  tables,
           bidTimerSeconds: bidTimer,
+          playTimerSeconds: playTimer,
           expiryHours:     4,
         }),
       });
@@ -71,6 +73,7 @@ export default function CreateRoomScreen() {
         playerCount,
         startingTables:  tables,
         bidTimerSeconds: bidTimer,
+        playTimerSeconds: playTimer,
         expiryHours:     4,
         deckId,
       };
@@ -145,6 +148,22 @@ export default function CreateRoomScreen() {
                 onPress={() => setBidTimer(t)}
               >
                 <Text style={[styles.timerText, bidTimer === t && styles.timerTextActive]}>{t}s</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Play timer */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Play Timer</Text>
+          <View style={styles.timerRow}>
+            {[15, 30, 45, 60].map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[styles.timerBtn, playTimer === t && styles.timerBtnActive]}
+                onPress={() => setPlayTimer(t)}
+              >
+                <Text style={[styles.timerText, playTimer === t && styles.timerTextActive]}>{t}s</Text>
               </TouchableOpacity>
             ))}
           </View>

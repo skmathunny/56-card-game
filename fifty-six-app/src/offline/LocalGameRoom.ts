@@ -33,6 +33,7 @@ export interface LocalRoomSettings {
   playerCount: 4 | 6 | 8;
   startingTables: number;
   bidTimerSeconds: number;
+  playTimerSeconds: number;
   expiryHours: number;
 }
 

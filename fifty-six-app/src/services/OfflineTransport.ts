@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: LocalRoomSettings = {
   playerCount:     4,
   startingTables:  12,
   bidTimerSeconds: 30,
+  playTimerSeconds: 30,
   expiryHours:     4,
 };
 

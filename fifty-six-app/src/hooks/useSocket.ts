@@ -2,12 +2,14 @@ import { useEffect } from 'react';
 import { useTransport } from '../services/transportContext';
 import { useGameStore } from '../store/gameSlice';
 import { useUIStore } from '../store/uiSlice';
+import { useLobbyStore } from '../store/lobbySlice';
 import { SERVER_EVENTS } from '../constants/events';
 
 export function useSocket() {
   const transport = useTransport();
   const { setGameState, setRoundSummary, addChatMessage, setPlayerDisconnected, setPlayerReconnected } = useGameStore();
   const { setRoundSummaryVisible, showTrickHistoryVote, setTrickHistoryOpen } = useUIStore();
+  const { setHostMigrated } = useLobbyStore();
 
   useEffect(() => {
     const onStateUpdated = (data: { publicState: any; privateHand: any[] }) => {
@@ -41,6 +43,10 @@ export function useSocket() {
       setPlayerReconnected(data.playerId);
     };
 
+    const onHostMigrated = (data: { newHostId: string; newHostName: string }) => {
+      setHostMigrated(data.newHostId);
+    };
+
     transport.on(SERVER_EVENTS.GAME_STATE_UPDATED,           onStateUpdated);
     transport.on(SERVER_EVENTS.GAME_ROUND_COMPLETE,          onRoundComplete);
     transport.on(SERVER_EVENTS.GAME_TRICK_HISTORY_REQUESTED, onTrickHistoryRequested);
@@ -48,6 +54,7 @@ export function useSocket() {
     transport.on(SERVER_EVENTS.CHAT_MESSAGE,                 onChatMessage);
     transport.on(SERVER_EVENTS.PLAYER_DISCONNECTED,          onPlayerDisconnected);
     transport.on(SERVER_EVENTS.PLAYER_RECONNECTED,           onPlayerReconnected);
+    transport.on(SERVER_EVENTS.HOST_MIGRATED,                onHostMigrated);
 
     return () => {
       transport.off(SERVER_EVENTS.GAME_STATE_UPDATED,           onStateUpdated);
@@ -57,6 +64,7 @@ export function useSocket() {
       transport.off(SERVER_EVENTS.CHAT_MESSAGE,                 onChatMessage);
       transport.off(SERVER_EVENTS.PLAYER_DISCONNECTED,          onPlayerDisconnected);
       transport.off(SERVER_EVENTS.PLAYER_RECONNECTED,           onPlayerReconnected);
+      transport.off(SERVER_EVENTS.HOST_MIGRATED,                onHostMigrated);
     };
   }, [transport]);
 }

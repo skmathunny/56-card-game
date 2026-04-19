@@ -28,6 +28,19 @@ type Nav = NativeStackNavigationProp<any>;
 
 const TEAM_COLORS = { A: Colors.teamA, B: Colors.teamB };
 
+interface TimerProps {
+  seconds: number;
+}
+
+function PlayTimer({ seconds }: TimerProps) {
+  const urgent = seconds <= 10;
+  return (
+    <View style={[styles.timerRing, urgent && { borderColor: Colors.warning }]}>
+      <Text style={[styles.timerText, urgent && { color: Colors.warning }]}>{seconds}</Text>
+    </View>
+  );
+}
+
 export default function PlayScreen() {
   const navigation = useNavigation<Nav>();
   const transport  = useTransport();
@@ -42,6 +55,7 @@ export default function PlayScreen() {
   } = useUIStore();
   const { width, height } = useWindowDimensions();
   const [teamPopup, setTeamPopup] = useState<'A' | 'B' | null>(null);
+  const [timeLeft, setTimeLeft] = useState(30);
 
   const cardHeight  = Math.min(height * 0.22, 160);
   const cardWidth   = Math.round(cardHeight * (52 / 76));
@@ -59,6 +73,34 @@ export default function PlayScreen() {
   useEffect(() => {
     if (gameState?.phase === 'complete') navigation.replace(ROUTES.END_GAME);
   }, [gameState?.phase]);
+
+  // Play timer — resets each time the current player changes
+  const { settings } = useLobbyStore();
+  const playTimerSeconds = settings?.playTimerSeconds ?? 30;
+  const currentPlayerSeat = gameState?.currentPlayerSeatIndex ?? -1;
+  useEffect(() => {
+    if (gameState?.phase !== 'playing' || !isMyTurn) return;
+    setTimeLeft(playTimerSeconds);
+    const id = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) {
+          // Auto-play lowest legal card when timer expires
+          const legalCards = myHand.filter(card => isLegal(card));
+          if (legalCards.length > 0) {
+            // Sort by rank (lowest first) then by suit
+            const lowestCard = legalCards.sort((a, b) => {
+              if (a.rank !== b.rank) return a.rank - b.rank;
+              return a.suit.localeCompare(b.suit);
+            })[0];
+            transport.playCard({ gameId: gameState.id, cardId: lowestCard.id });
+          }
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [currentPlayerSeat, gameState?.phase, isMyTurn, myHand, transport, gameState?.id, playTimerSeconds]);
 
   if (!gameState) {
     return (
@@ -204,9 +246,12 @@ export default function PlayScreen() {
         {/* Turn label */}
         <View style={styles.turnLabel}>
           {isMyTurn ? (
-            <Text style={styles.yourTurnText}>
-              {selectedCardId ? 'Tap again to play' : 'Your turn — select a card'}
-            </Text>
+            <View style={styles.myTurnContainer}>
+              <Text style={styles.yourTurnText}>
+                {selectedCardId ? 'Tap again to play' : 'Your turn — select a card'}
+              </Text>
+              <PlayTimer seconds={timeLeft} />
+            </View>
           ) : (
             <Text style={styles.waitingTurnText}>
               {currentPlayer?.displayName ?? '…'}'s turn
@@ -471,8 +516,25 @@ const styles = StyleSheet.create({
   trickEmpty: { color: Colors.textMuted, fontSize: FontSize.sm, fontStyle: 'italic' },
 
   turnLabel: { alignItems: 'center', paddingVertical: Spacing.xs },
+  myTurnContainer: { alignItems: 'center', gap: Spacing.sm },
   yourTurnText:    { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.accent },
   waitingTurnText: { fontSize: FontSize.sm, color: Colors.textSecondary, fontStyle: 'italic' },
+
+  timerRing: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: Colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.bg,
+  },
+  timerText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+    color: Colors.accent,
+  },
 
   handArea: {
     paddingBottom: Spacing.md,

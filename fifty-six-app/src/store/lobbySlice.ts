@@ -14,6 +14,7 @@ export interface RoomSettings {
   playerCount: 4 | 6 | 8;
   startingTables: number;
   bidTimerSeconds: number;
+  playTimerSeconds: number;
   expiryHours: number;
   deckId?: string;
 }
@@ -52,6 +53,11 @@ export const useLobbyStore = create<LobbyState>((set, get) => ({
     const myId = get().myPlayerId;
     const me = players.find(p => p.id === myId);
     set({ players, isHost: me?.isHost ?? false });
+  },
+
+  setHostMigrated(newHostId) {
+    const myId = get().myPlayerId;
+    set({ isHost: newHostId === myId });
   },
 
   clearLobby() {

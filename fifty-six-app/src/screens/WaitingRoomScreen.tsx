@@ -195,6 +195,9 @@ export default function WaitingRoomScreen() {
             <View style={styles.settingChip}>
               <Text style={styles.settingChipText}>⏱ {settings.bidTimerSeconds}s bid timer</Text>
             </View>
+            <View style={styles.settingChip}>
+              <Text style={styles.settingChipText}>🎯 {settings.playTimerSeconds}s play timer</Text>
+            </View>
           </View>
         )}
       </ScrollView>
