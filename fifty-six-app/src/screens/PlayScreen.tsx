@@ -47,6 +47,10 @@ export default function PlayScreen() {
   const cardWidth   = Math.round(cardHeight * (52 / 76));
   const cardOverlap = Math.round(cardWidth * 0.38);
 
+  // Opponent played cards and trick area use 65% of hand card size
+  const oppCardHeight = Math.round(cardHeight * 0.65);
+  const oppCardWidth  = Math.round(cardWidth  * 0.65);
+
 
   useEffect(() => {
     if (isRoundSummaryVisible) navigation.replace(ROUTES.ROUND_SUMMARY);
@@ -101,7 +105,6 @@ export default function PlayScreen() {
 
   const currentPlayer = gameState.players[gameState.currentPlayerSeatIndex];
   const trump = gameState.trump;
-  const trickCardSize = width >= 600 ? 'lg' : width >= 400 ? 'md' : 'sm';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -172,9 +175,9 @@ export default function PlayScreen() {
                   <Text style={styles.opponentAvatar}>{p.avatarUrl}</Text>
                   <Text style={styles.opponentName} numberOfLines={1}>{p.displayName}</Text>
                   {playedCard ? (
-                    <CardView card={playedCard.card} size="sm" />
+                    <CardView card={playedCard.card} width={oppCardWidth} height={oppCardHeight} />
                   ) : (
-                    <View style={styles.opponentCardBack} />
+                    <View style={[styles.opponentCardBack, { width: oppCardWidth, height: oppCardHeight }]} />
                   )}
                   {isCurrent && <View style={styles.turnIndicator} />}
                 </View>
@@ -189,7 +192,7 @@ export default function PlayScreen() {
             return (
               <View key={`${tc.playerId}-${tc.card.id}`} style={styles.trickCardWrap}>
                 <Text style={styles.trickPlayerName}>{player?.displayName ?? ''}</Text>
-                <CardView card={tc.card} size={trickCardSize} />
+                <CardView card={tc.card} width={oppCardWidth} height={oppCardHeight} />
               </View>
             );
           })}
@@ -429,7 +432,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgCard,
     borderRadius:    Radius.lg,
     padding:         Spacing.sm,
-    minWidth:        64,
+    minWidth:        80,
     borderWidth:     1.5,
     borderColor:     'transparent',
   },
