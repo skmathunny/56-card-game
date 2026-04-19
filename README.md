@@ -73,7 +73,7 @@ npm run dev               # ts-node-dev with hot reload
 The server starts on `http://localhost:3000` by default.
 
 ```bash
-npm test                        # run all 130 unit tests
+npm test                        # run all server unit tests
 npm test -- --reporter=verbose  # verbose per-test output
 npm test -- --coverage          # with V8 coverage report
 ```
@@ -227,14 +227,31 @@ All 33 user stories and ~90 test case issues are tracked on the [GitHub project 
 | US29 | AI automatically takes over disconnected player | ✅ Done |
 | US30 | Host role migrates on host disconnection | 🔲 Backlog |
 | US31 | In-game chat between players | ✅ Done |
-| US32 | Rematch without returning to lobby | 🔲 Backlog |
+| US32 | Rematch without returning to lobby | ✅ Done |
 | US33 | Play offline against AI | ✅ Done |
 
-**25 of 33 user stories complete** (US18 partially done).
+**26 of 33 user stories complete** (US18 partially done).
 
 ---
 
 ## Recent Changes
+
+### 2026-04-19 — End game flow fixes, rematch, and expanded test coverage
+
+**Bug fixes**
+- EndGameScreen was never displayed after the final round — `GAME_ROUND_COMPLETE` carried the updated `publicState` (phase `complete`) but `useSocket` never applied it to the store, so `gameState.phase` stayed stale; fixed by updating the store from `publicState` in the round-complete handler
+- `RoundSummaryScreen` always navigated to `DealAndBid` on continue, even at game end; now checks `gameState.phase === 'complete'` and navigates to `EndGame` instead
+- `LocalGameRoom` (offline) omitted `publicState` from `GAME_ROUND_COMPLETE`; now matches the server payload so the same fix works offline
+- Non-host players were stuck on `WaitingRoomScreen` when the host started a game (initial start and rematch) — `WaitingRoomScreen` now watches `gameState.phase` and auto-navigates all players to `DealAndBid` when the server pushes the dealing state
+- "Play Again" left stale completed-game state in the store; `clearGame()` is now called before navigating to `WaitingRoomScreen`
+
+**Features**
+- Play Again (US32): after a game ends, all players can start a new game in the same room with the same player count; tables reset to the original `startingTables` value; no lobby re-join required
+
+**Testing**
+- Server test suite expanded from 157 → 186 tests (+29)
+- `ScoringEngine`: 10 new tests — `checkWinner` edge cases (both at 1 table, exactly 0), `applyRoundResult` correctness (bid-team unchanged on success, opponent unchanged on failure, table clamping, `roundPoints` reset for both teams, Team B as bidding team)
+- `GameEngine`: 19 new tests — end game scenarios (Team B wins via A failure, Team B wins via own bid, bid-56 wipe-out, doubled bid elimination, `complete` phase locks further scoring, winner persists), new game reset assertions (phase, winner, round number, tables, points, cards, tricks, winningBid all verified)
 
 ### 2026-04-19 — Modular card deck system with image support
 
