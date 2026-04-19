@@ -52,14 +52,49 @@ describe('scoreRound', () => {
     expect(result.tablesChange).toBe(4);
   });
 
+  it('bid 39 results in 1 table change on success (upper boundary of tier 1)', () => {
+    const result = scoreRound(makeBid(39), makeTeams(12, 12, 40, 0), players);
+    expect(result.tablesChange).toBe(1);
+  });
+
+  it('bid 47 results in 2 table change on success (upper boundary of tier 2)', () => {
+    const result = scoreRound(makeBid(47), makeTeams(12, 12, 48, 0), players);
+    expect(result.tablesChange).toBe(2);
+  });
+
+  it('bid 55 results in 3 table change on success (upper boundary of tier 3)', () => {
+    const result = scoreRound(makeBid(55), makeTeams(12, 12, 56, 0), players);
+    expect(result.tablesChange).toBe(3);
+  });
+
   it('doubled bid doubles the table change', () => {
     const result = scoreRound(makeBid(14, 'p0', 'double'), makeTeams(12, 12, 16, 0), players);
     expect(result.tablesChange).toBe(2);
   });
 
+  it('redoubled bid multiplies table change by 4', () => {
+    const result = scoreRound(makeBid(14, 'p0', 'redouble'), makeTeams(12, 12, 16, 0), players);
+    expect(result.tablesChange).toBe(4);
+  });
+
   it('failure table change is negative', () => {
     const result = scoreRound(makeBid(20), makeTeams(12, 12, 15, 0), players);
     expect(result.tablesChange).toBeLessThan(0);
+  });
+
+  it('failure on bid 14–39 loses 2 tables (base 1 + 1)', () => {
+    const result = scoreRound(makeBid(20), makeTeams(12, 12, 15, 0), players);
+    expect(result.tablesChange).toBe(-2);
+  });
+
+  it('failure on bid 40–47 loses 3 tables (base 2 + 1)', () => {
+    const result = scoreRound(makeBid(40), makeTeams(12, 12, 35, 0), players);
+    expect(result.tablesChange).toBe(-3);
+  });
+
+  it('failure on doubled bid 14–39 loses 4 tables ((base 1 + 1) × 2)', () => {
+    const result = scoreRound(makeBid(14, 'p0', 'double'), makeTeams(12, 12, 10, 0), players);
+    expect(result.tablesChange).toBe(-4);
   });
 
   it('captures finalTeamPoints before reset', () => {

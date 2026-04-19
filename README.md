@@ -78,19 +78,19 @@ npm test -- --reporter=verbose  # verbose per-test output
 npm test -- --coverage          # with V8 coverage report
 ```
 
-**Test results (2026-04-19): 132 / 132 server · 19 / 19 app — 151 total, 0 failures.**
+**Test results (2026-04-19): 157 / 157 server · 19 / 19 app — 176 total, 0 failures.**
 
 #### Server (fifty-six-server) — Vitest
 
 | Suite                 | Tests | Covers |
 |-----------------------|-------|--------|
-| BiddingEngine.test.ts | 24    | Bid range (4p: 14–28, 6p: 28–56), turn order, double/redouble, all-pass |
-| ScoringEngine.test.ts | 15    | Success/failure, table changes, doubles, finalTeamPoints snapshot |
+| BiddingEngine.test.ts | 36    | Bid range (4p: 14–28, 6p/8p: 28–56), turn order, double/redouble, all-pass, 6p/8p completion |
+| ScoringEngine.test.ts | 22    | Success/failure, all table tier boundaries, doubles/redoubles, failure formula, finalTeamPoints |
 | TrickEngine.test.ts   | 11    | Play validation, trump resolution, point calculation |
-| Deck.test.ts          | 13    | 1-deck/2-deck, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
+| Deck.test.ts          | 17    | 1-deck/2-deck, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
 | Dealer.test.ts        | 16    | Hand distribution, firstBidder, nextAnticlockwise wrapping |
 | AIPlayer.test.ts      | 12    | Bid range per playerCount, trump selection, play strategy |
-| GameEngine.test.ts    | 36    | Full lifecycle: createGame → bidding → playing → scoring → winner |
+| GameEngine.test.ts    | 43    | Full lifecycle (4p/6p/8p): createGame → bidding → playing → scoring → winner, round point totals |
 
 #### App (fifty-six-app) — Vitest
 

@@ -182,4 +182,96 @@ describe('resolveWinningBid', () => {
     const winning = resolveWinningBid(state, 'dealer', 6);
     expect(winning.amount).toBe(28);
   });
+
+  it('forced minimum is 28 for 8-player all-pass', () => {
+    let state = fresh();
+    for (const seat of [0, 7, 6, 5, 4, 3, 2, 1]) {
+      state = applyBid(state, { playerId: `p${seat}`, type: 'pass' }, seat, 8);
+    }
+    const winning = resolveWinningBid(state, 'dealer', 8);
+    expect(winning.amount).toBe(28);
+    expect(winning.trump).toBe('no-trumps');
+  });
+});
+
+// ── 8-player: bid range 28–56 ─────────────────────────────────────────────
+
+describe('validateBid — 8-player bid range', () => {
+  it('accepts minimum bid of 28', () => {
+    expect(validateBid(fresh(), { playerId: 'p0', type: 'bid', amount: 28, trump: 'spades' }, 0, 8)).toBeNull();
+  });
+
+  it('accepts maximum bid of 56', () => {
+    expect(validateBid(fresh(), { playerId: 'p0', type: 'bid', amount: 56, trump: 'spades' }, 0, 8)).toBeNull();
+  });
+
+  it('rejects bid of 27 (below minimum for 8p)', () => {
+    expect(validateBid(fresh(), { playerId: 'p0', type: 'bid', amount: 27, trump: 'spades' }, 0, 8)).toBe('BID_OUT_OF_RANGE');
+  });
+
+  it('rejects bid of 57 (above maximum)', () => {
+    expect(validateBid(fresh(), { playerId: 'p0', type: 'bid', amount: 57, trump: 'spades' }, 0, 8)).toBe('BID_OUT_OF_RANGE');
+  });
+});
+
+// ── bidding completion (6-player) ─────────────────────────────────────────
+
+describe('applyBid — bidding completion (6-player)', () => {
+  it('ends after 5 consecutive passes following a bid', () => {
+    // anticlockwise from seat 0: 0 → 5 → 4 → 3 → 2 → 1
+    let state = fresh();
+    state = applyBid(state, { playerId: 'p0', type: 'bid', amount: 28, trump: 'spades' }, 0, 6);
+    for (const seat of [5, 4, 3, 2, 1]) {
+      state = applyBid(state, { playerId: `p${seat}`, type: 'pass' }, seat, 6);
+    }
+    expect(state.isComplete).toBe(true);
+  });
+
+  it('does NOT end after only 4 passes following a bid', () => {
+    let state = fresh();
+    state = applyBid(state, { playerId: 'p0', type: 'bid', amount: 28, trump: 'spades' }, 0, 6);
+    for (const seat of [5, 4, 3, 2]) {
+      state = applyBid(state, { playerId: `p${seat}`, type: 'pass' }, seat, 6);
+    }
+    expect(state.isComplete).toBe(false);
+  });
+
+  it('ends after all 6 pass (no bid placed)', () => {
+    let state = fresh();
+    for (const seat of [0, 5, 4, 3, 2, 1]) {
+      state = applyBid(state, { playerId: `p${seat}`, type: 'pass' }, seat, 6);
+    }
+    expect(state.isComplete).toBe(true);
+  });
+});
+
+// ── bidding completion (8-player) ─────────────────────────────────────────
+
+describe('applyBid — bidding completion (8-player)', () => {
+  it('ends after 7 consecutive passes following a bid', () => {
+    // anticlockwise from seat 0: 0 → 7 → 6 → 5 → 4 → 3 → 2 → 1
+    let state = fresh();
+    state = applyBid(state, { playerId: 'p0', type: 'bid', amount: 28, trump: 'spades' }, 0, 8);
+    for (const seat of [7, 6, 5, 4, 3, 2, 1]) {
+      state = applyBid(state, { playerId: `p${seat}`, type: 'pass' }, seat, 8);
+    }
+    expect(state.isComplete).toBe(true);
+  });
+
+  it('does NOT end after only 6 passes following a bid', () => {
+    let state = fresh();
+    state = applyBid(state, { playerId: 'p0', type: 'bid', amount: 28, trump: 'spades' }, 0, 8);
+    for (const seat of [7, 6, 5, 4, 3, 2]) {
+      state = applyBid(state, { playerId: `p${seat}`, type: 'pass' }, seat, 8);
+    }
+    expect(state.isComplete).toBe(false);
+  });
+
+  it('ends after all 8 pass (no bid placed)', () => {
+    let state = fresh();
+    for (const seat of [0, 7, 6, 5, 4, 3, 2, 1]) {
+      state = applyBid(state, { playerId: `p${seat}`, type: 'pass' }, seat, 8);
+    }
+    expect(state.isComplete).toBe(true);
+  });
 });

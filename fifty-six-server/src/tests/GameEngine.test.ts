@@ -89,6 +89,17 @@ describe('createGame', () => {
     expect(teamBIds).toContain('p3');
   });
 
+  it('8-player: each player gets 8 cards', () => {
+    const state = createGame('room1', makePlayers(8), 12);
+    state.players.forEach(p => expect(p.hand).toHaveLength(8));
+  });
+
+  it('8-player: all 64 card IDs are unique across all hands', () => {
+    const state = createGame('room1', makePlayers(8), 12);
+    const allIds = state.players.flatMap(p => p.hand.map(c => c.id));
+    expect(new Set(allIds).size).toBe(64);
+  });
+
   it('all card IDs are unique across all hands', () => {
     const state = createGame('room1', makePlayers(4), 12);
     const allIds = state.players.flatMap(p => p.hand.map(c => c.id));
@@ -439,5 +450,73 @@ describe('scoreRoundAndAdvance', () => {
     expect(roundResult!.success).toBe(true);
     expect(roundResult!.finalTeamPoints.A).toBe(16);
     expect(roundResult!.finalTeamPoints.B).toBe(12);
+  });
+
+  it('multi-round: game ends when a team reaches 0 tables', () => {
+    // 3 successive wins by Team A at bid 14 should drain Team B from 3 → 0
+    let s = makeScoringState({ bidPlayerId: 'p0', bidAmount: 14, roundPointsA: 16, tablesA: 12, tablesB: 3 });
+    let { state: s1 } = scoreRoundAndAdvance(s);
+    expect(s1.teams.B.tables).toBe(2);
+    expect(s1.winner).toBeNull();
+
+    // Simulate second win: re-use scoring state with updated tables
+    s1 = { ...s1, phase: 'scoring', winningBid: makeBid('p0', 14),
+            teams: { A: { ...s1.teams.A, roundPoints: 16 }, B: { ...s1.teams.B, roundPoints: 0 } } };
+    let { state: s2 } = scoreRoundAndAdvance(s1);
+    expect(s2.teams.B.tables).toBe(1);
+    expect(s2.winner).toBeNull();
+
+    s2 = { ...s2, phase: 'scoring', winningBid: makeBid('p0', 14),
+            teams: { A: { ...s2.teams.A, roundPoints: 16 }, B: { ...s2.teams.B, roundPoints: 0 } } };
+    let { state: s3 } = scoreRoundAndAdvance(s2);
+    expect(s3.teams.B.tables).toBe(0);
+    expect(s3.winner).toBe('A');
+    expect(s3.phase).toBe('complete');
+  });
+});
+
+// ── round point totals ────────────────────────────────────────────────────
+
+describe('round point totals per player count', () => {
+  it('4-player: total point value of all dealt cards is 28', () => {
+    const state = createGame('room1', makePlayers(4), 12);
+    const total = state.players.flatMap(p => p.hand).reduce((sum, c) => sum + c.pointValue, 0);
+    expect(total).toBe(28);
+  });
+
+  it('6-player: total point value of all dealt cards is 56', () => {
+    const state = createGame('room1', makePlayers(6), 12);
+    const total = state.players.flatMap(p => p.hand).reduce((sum, c) => sum + c.pointValue, 0);
+    expect(total).toBe(56);
+  });
+
+  it('8-player: total point value of all dealt cards is 56', () => {
+    const state = createGame('room1', makePlayers(8), 12);
+    const total = state.players.flatMap(p => p.hand).reduce((sum, c) => sum + c.pointValue, 0);
+    expect(total).toBe(56);
+  });
+
+  it('4-player: team roundPoints sum to 28 after all tricks are played', () => {
+    const allHearts = ['J', '9', 'A', '10', 'K', 'Q'] as const;
+    const hands = {
+      p0: allHearts.map(r => makeCard('hearts', r)),
+      p1: ['J', '9', 'A', '10', 'K', 'Q'].map(r => makeCard('spades', r as any)),
+      p2: ['J', '9', 'A', '10', 'K', 'Q'].map(r => makeCard('clubs', r as any)),
+      p3: ['J', '9', 'A', '10', 'K', 'Q'].map(r => makeCard('diamonds', r as any)),
+    };
+    let s: GameState = { ...makePlayingState(hands), trump: 'no-trumps' as any };
+
+    for (let trick = 0; trick < 6; trick++) {
+      const p0Card = s.players.find(p => p.id === 'p0')!.hand[0];
+      let res = playCard(s, 'p0', p0Card.id); s = res.state;
+      for (const pid of ['p3', 'p2', 'p1']) {
+        const card = s.players.find(p => p.id === pid)!.hand[0];
+        res = playCard(s, pid, card.id); s = res.state;
+      }
+    }
+
+    expect(s.phase).toBe('scoring');
+    const totalPoints = s.teams.A.roundPoints + s.teams.B.roundPoints;
+    expect(totalPoints).toBe(28);
   });
 });

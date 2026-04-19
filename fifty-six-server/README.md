@@ -67,20 +67,20 @@ npm test -- --coverage          # with V8 coverage report
 
 ```
  Test Files  7 passed (7)
-      Tests  132 passed (132)
-   Duration  ~707ms
+      Tests  157 passed (157)
+   Duration  ~783ms
 ```
 
 | Test file             | Tests | What is covered |
 |-----------------------|-------|-----------------|
-| BiddingEngine.test.ts | 24    | Bid range (4p/6p), turn order, raise/double/redouble, all-pass completion |
-| ScoringEngine.test.ts | 15    | Success/failure, table tiers, doubles, finalTeamPoints snapshot |
+| BiddingEngine.test.ts | 36    | Bid range (4p/6p/8p), turn order, raise/double/redouble, all-pass completion, 6p/8p completion |
+| ScoringEngine.test.ts | 22    | Success/failure, table tiers (all boundaries), doubles/redoubles, failure formula, finalTeamPoints |
 | TrickEngine.test.ts   | 11    | Play validation, trump resolution, rank order, point calculation |
-| Deck.test.ts          | 13    | 1-deck/2-deck build, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
+| Deck.test.ts          | 17    | 1-deck/2-deck build, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
 | Dealer.test.ts        | 16    | Hand distribution per player count, firstBidderSeatIndex, nextAnticlockwise |
 | AIPlayer.test.ts      | 12    | decideBid range (4p 14–28 / 6p 28–56), trump selection, decidePlay strategy |
-| GameEngine.test.ts    | 36    | createGame → startBidding → placeBid → playCard → scoreRoundAndAdvance |
-| **Total**             | **132** | |
+| GameEngine.test.ts    | 43    | createGame (4p/6p/8p) → startBidding → placeBid → playCard → scoreRoundAndAdvance, round point totals |
+| **Total**             | **157** | |
 
 ### Coverage Report (2026-04-18)
 
