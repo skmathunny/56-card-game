@@ -13,6 +13,8 @@ interface CardViewProps {
   onPress?: () => void;
   size?: 'sm' | 'md' | 'lg';
   faceDown?: boolean;
+  width?: number;
+  height?: number;
 }
 
 const SIZES = {
@@ -21,10 +23,13 @@ const SIZES = {
   lg: { width: 64, height: 92 },
 };
 
-export function CardView({ card, selected, legal = true, onPress, size = 'md', faceDown }: CardViewProps) {
+export function CardView({ card, selected, legal = true, onPress, size = 'md', faceDown, width, height }: CardViewProps) {
   const deckId = useLobbyStore(s => s.settings?.deckId);
   const theme  = getDeckTheme(deckId);
-  const dims   = SIZES[size];
+  const dims   = (width && height) ? { width, height } : SIZES[size];
+  const isCustom = !!(width && height);
+  const rankFontSize = isCustom ? Math.round(dims.height * 0.15) : FontSize.sm;
+  const suitFontSize = isCustom ? Math.round(dims.height * 0.22) : FontSize.lg;
 
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -85,13 +90,13 @@ export function CardView({ card, selected, legal = true, onPress, size = 'md', f
         !legal && styles.cardIllegal,
       ]}
     >
-      <Text style={[styles.rank, { color: textColor }, !legal && styles.dimText]}>
+      <Text style={[styles.rank, { color: textColor, fontSize: rankFontSize }, !legal && styles.dimText]}>
         {card.rank}
       </Text>
-      <Text style={[styles.suitCenter, { color: textColor }, !legal && styles.dimText]}>
+      <Text style={[styles.suitCenter, { color: textColor, fontSize: suitFontSize }, !legal && styles.dimText]}>
         {SUIT_SYMBOLS[card.suit]}
       </Text>
-      <Text style={[styles.rankBottom, { color: textColor }, !legal && styles.dimText]}>
+      <Text style={[styles.rankBottom, { color: textColor, fontSize: rankFontSize }, !legal && styles.dimText]}>
         {card.rank}
       </Text>
     </TouchableOpacity>

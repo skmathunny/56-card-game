@@ -40,8 +40,12 @@ export default function PlayScreen() {
     trickHistoryVotePrompt, dismissTrickHistoryVote,
     isRoundSummaryVisible,
   } = useUIStore();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [teamPopup, setTeamPopup] = useState<'A' | 'B' | null>(null);
+
+  const cardHeight  = Math.min(height * 0.22, 160);
+  const cardWidth   = Math.round(cardHeight * (52 / 76));
+  const cardOverlap = Math.round(cardWidth * 0.38);
 
 
   useEffect(() => {
@@ -209,14 +213,14 @@ export default function PlayScreen() {
       </View>
 
       {/* Player hand */}
-      <View style={styles.handArea}>
+      <View style={[styles.handArea, { paddingBottom: Math.round(cardHeight * 0.12) + Spacing.sm }]}>
         <View style={styles.hand}>
           {myHand.map((card, i) => (
             <View
               key={card.id}
               style={[
                 styles.handCardWrap,
-                { zIndex: i, marginLeft: i === 0 ? 0 : -20 },
+                { zIndex: i, marginLeft: i === 0 ? 0 : -cardOverlap },
                 selectedCardId === card.id && styles.handCardSelected,
               ]}
             >
@@ -225,7 +229,8 @@ export default function PlayScreen() {
                 selected={selectedCardId === card.id}
                 legal={isLegal(card)}
                 onPress={() => handleCardPress(card)}
-                size="md"
+                width={cardWidth}
+                height={cardHeight}
               />
             </View>
           ))}
