@@ -130,13 +130,24 @@ describe('applyBid — bidding completion (4-player)', () => {
     expect(state.isComplete).toBe(false);
   });
 
-  it('ends after all 4 pass (no bid placed)', () => {
+  it('ends after 3 consecutive passes following a double', () => {
     let state = fresh();
-    state = applyBid(state, { playerId: 'p0', type: 'pass' }, 0, 4);
-    state = applyBid(state, { playerId: 'p3', type: 'pass' }, 3, 4);
+    state = applyBid(state, { playerId: 'p0', type: 'bid', amount: 14, trump: 'spades' }, 0, 4);
+    state = applyBid(state, { playerId: 'p3', type: 'double' }, 3, 4);
     state = applyBid(state, { playerId: 'p2', type: 'pass' }, 2, 4);
     state = applyBid(state, { playerId: 'p1', type: 'pass' }, 1, 4);
+    state = applyBid(state, { playerId: 'p0', type: 'pass' }, 0, 4);
     expect(state.isComplete).toBe(true);
+    expect(state.currentHighBid?.type).toBe('double');
+  });
+
+  it('does NOT end after only 2 passes following a double', () => {
+    let state = fresh();
+    state = applyBid(state, { playerId: 'p0', type: 'bid', amount: 14, trump: 'spades' }, 0, 4);
+    state = applyBid(state, { playerId: 'p3', type: 'double' }, 3, 4);
+    state = applyBid(state, { playerId: 'p2', type: 'pass' }, 2, 4);
+    state = applyBid(state, { playerId: 'p1', type: 'pass' }, 1, 4);
+    expect(state.isComplete).toBe(false);
   });
 
   it('advances bidder anticlockwise', () => {
@@ -161,6 +172,20 @@ describe('resolveWinningBid', () => {
     const winning = resolveWinningBid(state, 'p0', 4);
     expect(winning.amount).toBe(20);
     expect(winning.trump).toBe('hearts');
+  });
+
+  it('returns double bid with correct amount and trump', () => {
+    let state = fresh();
+    state = applyBid(state, { playerId: 'p0', type: 'bid', amount: 16, trump: 'spades' }, 0, 4);
+    state = applyBid(state, { playerId: 'p3', type: 'double' }, 3, 4);
+    // Pass until bidding completes
+    state = applyBid(state, { playerId: 'p2', type: 'pass' }, 2, 4);
+    state = applyBid(state, { playerId: 'p1', type: 'pass' }, 1, 4);
+    state = applyBid(state, { playerId: 'p0', type: 'pass' }, 0, 4);
+    const winning = resolveWinningBid(state, 'p0', 4);
+    expect(winning.type).toBe('double');
+    expect(winning.amount).toBe(16);
+    expect(winning.trump).toBe('spades');
   });
 
   it('forced minimum is 14 for 4-player all-pass', () => {

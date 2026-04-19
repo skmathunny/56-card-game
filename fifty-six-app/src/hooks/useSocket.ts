@@ -15,7 +15,8 @@ export function useSocket() {
     };
 
     const onRoundComplete = (data: { roundSummary: any; publicState?: any }) => {
-      setRoundSummary(data.roundSummary);
+      const tricks = useGameStore.getState().gameState?.tricks ?? [];
+      setRoundSummary(data.roundSummary, tricks);
       if (data.publicState) setGameState(data.publicState, []);
       setRoundSummaryVisible(true);
     };

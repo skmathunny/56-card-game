@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,6 +8,8 @@ import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
 import { useGameStore } from '../store/gameSlice';
 import { useUIStore } from '../store/uiSlice';
+import { SUIT_SYMBOLS } from '../constants/cards';
+import type { Suit } from '../constants/cards';
 
 type Nav = NativeStackNavigationProp<any>;
 
@@ -17,6 +19,7 @@ export default function RoundSummaryScreen() {
   const navigation  = useNavigation<Nav>();
   const { roundSummary, roundHistory, gameState, clearRoundSummary } = useGameStore();
   const { setRoundSummaryVisible } = useUIStore();
+  const [tricksExpanded, setTricksExpanded] = useState(false);
 
   const handleContinue = () => {
     clearRoundSummary();
@@ -105,6 +108,60 @@ export default function RoundSummaryScreen() {
             ))}
           </View>
         </View>
+
+        {/* Trick history for this round */}
+        {roundSummary.tricks.length > 0 && (
+          <View style={styles.trickHistoryCard}>
+            <TouchableOpacity
+              style={styles.trickHistoryHeader}
+              onPress={() => setTricksExpanded(v => !v)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.trickHistoryTitle}>Trick History</Text>
+              <Text style={styles.trickHistoryChevron}>{tricksExpanded ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+
+            {tricksExpanded && roundSummary.tricks.map((trick, idx) => {
+              const winner = gameState.players.find(p => p.id === trick.winnerId);
+              return (
+                <View key={trick.id} style={styles.trickRow}>
+                  <View style={styles.trickRowHeader}>
+                    <Text style={styles.trickNum}>Trick {idx + 1}</Text>
+                    {trick.points > 0 && (
+                      <Text style={styles.trickPoints}>{trick.points} pts</Text>
+                    )}
+                    {winner && (
+                      <Text style={styles.trickWinner}>
+                        Won by {winner.avatarUrl} {winner.displayName}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.trickCards}>
+                    {trick.cards.map(tc => {
+                      const player = gameState.players.find(p => p.id === tc.playerId);
+                      const isRed  = tc.card.suit === 'hearts' || tc.card.suit === 'diamonds';
+                      return (
+                        <View key={`${tc.playerId}-${tc.card.id}`} style={styles.miniCardItem}>
+                          <View style={styles.miniCard}>
+                            <Text style={[styles.miniRank, { color: isRed ? Colors.red : '#1a1a2e' }]}>
+                              {tc.card.rank}
+                            </Text>
+                            <Text style={[styles.miniSuit, { color: isRed ? Colors.red : '#1a1a2e' }]}>
+                              {SUIT_SYMBOLS[tc.card.suit as Suit]}
+                            </Text>
+                          </View>
+                          <Text style={styles.miniPlayerName} numberOfLines={1}>
+                            {player?.displayName ?? '?'}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {/* Game history */}
         {previousRounds.length > 0 && (
@@ -260,4 +317,58 @@ const styles = StyleSheet.create({
   },
   historyCell:    { fontSize: FontSize.sm },
   historyOutcome: { fontSize: FontSize.xs, fontWeight: FontWeight.heavy },
+
+  trickHistoryCard: {
+    backgroundColor: Colors.bgCard,
+    borderRadius:    Radius.xl,
+    padding:         Spacing.lg,
+    gap:             Spacing.md,
+  },
+  trickHistoryHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  trickHistoryTitle: {
+    fontSize:      FontSize.sm,
+    color:         Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  trickHistoryChevron: { fontSize: FontSize.xs, color: Colors.textMuted },
+
+  trickRow: {
+    backgroundColor: Colors.bg,
+    borderRadius:    Radius.lg,
+    padding:         Spacing.md,
+    gap:             Spacing.sm,
+  },
+  trickRowHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' },
+  trickNum:       { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.textPrimary },
+  trickPoints: {
+    fontSize:          FontSize.xs,
+    color:             Colors.warning,
+    backgroundColor:   Colors.bgCard,
+    borderRadius:      Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical:   2,
+  },
+  trickWinner: { fontSize: FontSize.xs, color: Colors.textSecondary, marginLeft: 'auto' },
+
+  trickCards:    { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
+  miniCardItem:  { alignItems: 'center', gap: 4 },
+  miniCard: {
+    width:           36,
+    height:          50,
+    backgroundColor: Colors.cardFace,
+    borderRadius:    Radius.sm,
+    borderWidth:     1,
+    borderColor:     Colors.cardBorder,
+    padding:         2,
+    justifyContent:  'space-between',
+    alignItems:      'center',
+  },
+  miniRank:       { fontSize: FontSize.xs, fontWeight: FontWeight.heavy, alignSelf: 'flex-start' },
+  miniSuit:       { fontSize: FontSize.sm },
+  miniPlayerName: { fontSize: FontSize.xs, color: Colors.textMuted, maxWidth: 48, textAlign: 'center' },
 });

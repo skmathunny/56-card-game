@@ -74,6 +74,7 @@ export interface RoundSummary {
   doubled: boolean;
   redoubled: boolean;
   finalTeamPoints: { A: number; B: number };
+  tricks: Trick[];
 }
 
 export interface RoundHistoryEntry extends RoundSummary {
@@ -98,7 +99,7 @@ interface GameStore {
   disconnectedPlayers: Set<string>;
 
   setGameState(state: PublicGameState, hand: Card[]): void;
-  setRoundSummary(summary: RoundSummary): void;
+  setRoundSummary(summary: RoundSummary, tricks: Trick[]): void;
   clearRoundSummary(): void;
   addChatMessage(msg: ChatMessage): void;
   markChatRead(): void;
@@ -120,11 +121,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ gameState, myHand });
   },
 
-  setRoundSummary(roundSummary) {
+  setRoundSummary(roundSummary, tricks) {
     const roundNumber = get().gameState?.roundNumber ?? get().roundHistory.length + 1;
+    const full = { ...roundSummary, tricks };
     set(s => ({
-      roundSummary,
-      roundHistory: [...s.roundHistory, { ...roundSummary, roundNumber }],
+      roundSummary: full,
+      roundHistory: [...s.roundHistory, { ...full, roundNumber }],
     }));
   },
 

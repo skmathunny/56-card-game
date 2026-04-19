@@ -62,6 +62,14 @@ export function placeBid(state: GameState, playerId: string, input: PlaceBidInpu
   const error = validateBid(state.biddingState, input, player.seatIndex, state.playerCount);
   if (error) return { state, error };
 
+  // Additional validation: double/redouble can only be done by opponents
+  if ((input.type === 'double' || input.type === 'redouble') && state.biddingState.currentHighBid) {
+    const highBidPlayer = state.players.find(p => p.id === state.biddingState.currentHighBid!.playerId);
+    if (highBidPlayer && highBidPlayer.teamId === player.teamId) {
+      return { state, error: input.type === 'double' ? 'CANNOT_DOUBLE' : 'CANNOT_REDOUBLE' };
+    }
+  }
+
   const newBiddingState = applyBid(state.biddingState, input, player.seatIndex, state.playerCount);
 
   if (newBiddingState.isComplete) {

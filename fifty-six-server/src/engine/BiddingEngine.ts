@@ -70,8 +70,12 @@ export function applyBid(
   const bid: Bid = {
     id: uuid(),
     playerId: input.playerId,
-    amount: input.amount ?? null,
-    trump: input.trump ?? null,
+    amount: input.type === 'double' || input.type === 'redouble' 
+      ? state.currentHighBid?.amount ?? null
+      : input.amount ?? null,
+    trump: input.type === 'double' || input.type === 'redouble'
+      ? state.currentHighBid?.trump ?? null
+      : input.trump ?? null,
     type: input.type,
     conventionId: DEFAULT_CONVENTION,
     timestamp: Date.now(),

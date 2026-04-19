@@ -222,6 +222,58 @@ describe('placeBid', () => {
     expect(s.winningBid?.amount).toBe(14);
     expect(s.winningBid?.trump).toBe('no-trumps');
   });
+
+  it('prevents same-team double', () => {
+    const state = createGame('room1', makePlayers(4), 12);
+    let { state: s } = startBidding(state);
+
+    // First bidder is seat 3 (p3, team B)
+    ({ state: s } = placeBid(s, 'p3', { playerId: 'p3', type: 'bid', amount: 14, trump: 'spades' }));
+    // Next is seat 2 (p2, team A) passes
+    ({ state: s } = placeBid(s, 'p2', { playerId: 'p2', type: 'pass' }));
+    // Next is seat 1 (p1, team B, same as p3) tries to double - should fail
+    const { error } = placeBid(s, 'p1', { playerId: 'p1', type: 'double' });
+    expect(error).toBe('CANNOT_DOUBLE');
+  });
+
+  it('allows opponent double', () => {
+    const state = createGame('room1', makePlayers(4), 12);
+    let { state: s } = startBidding(state);
+
+    // p3 (team B) bids 14
+    ({ state: s } = placeBid(s, 'p3', { playerId: 'p3', type: 'bid', amount: 14, trump: 'spades' }));
+    // p2 (team A, opponent) doubles - should succeed
+    const { error } = placeBid(s, 'p2', { playerId: 'p2', type: 'double' });
+    expect(error).toBeUndefined();
+  });
+
+  it('prevents same-team redouble', () => {
+    const state = createGame('room1', makePlayers(4), 12);
+    let { state: s } = startBidding(state);
+
+    // p3 (team B) bids 14
+    ({ state: s } = placeBid(s, 'p3', { playerId: 'p3', type: 'bid', amount: 14, trump: 'spades' }));
+    // p2 (team A) doubles
+    ({ state: s } = placeBid(s, 'p2', { playerId: 'p2', type: 'double' }));
+    // p1 (team B) passes
+    ({ state: s } = placeBid(s, 'p1', { playerId: 'p1', type: 'pass' }));
+    // p0 (team A, same as p2) tries to redouble - should fail
+    const { error } = placeBid(s, 'p0', { playerId: 'p0', type: 'redouble' });
+    expect(error).toBe('CANNOT_REDOUBLE');
+  });
+
+  it('allows opponent redouble', () => {
+    const state = createGame('room1', makePlayers(4), 12);
+    let { state: s } = startBidding(state);
+
+    // p3 (team B) bids 14
+    ({ state: s } = placeBid(s, 'p3', { playerId: 'p3', type: 'bid', amount: 14, trump: 'spades' }));
+    // p2 (team A) doubles
+    ({ state: s } = placeBid(s, 'p2', { playerId: 'p2', type: 'double' }));
+    // p1 (team B, opponent) redoubles - should succeed
+    const { error } = placeBid(s, 'p1', { playerId: 'p1', type: 'redouble' });
+    expect(error).toBeUndefined();
+  });
 });
 
 // ── playCard ───────────────────────────────────────────────────────────────

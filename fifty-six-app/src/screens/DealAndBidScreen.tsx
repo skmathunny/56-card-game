@@ -167,7 +167,11 @@ export default function DealAndBidScreen() {
   const BID_AMOUNTS  = buildBidAmounts(gameState.playerCount);
   const baseBid      = gameState.playerCount === 4 ? 14 : 28;
   const highBid      = gameState.biddingState.currentHighBid;
-  const minBid       = highBid ? (highBid.amount ?? baseBid) + 1 : baseBid;
+  // Find the highest bid amount in the bidding history
+  const highestBidAmount = gameState.biddingState.bids
+    .filter(b => b.type === 'bid')
+    .reduce((max, b) => Math.max(max, b.amount ?? 0), 0);
+  const minBid = highestBidAmount > 0 ? highestBidAmount + 1 : baseBid;
   const validAmounts = BID_AMOUNTS.filter((a) => a >= minBid);
 
   useEffect(() => {
@@ -199,9 +203,19 @@ export default function DealAndBidScreen() {
     await transport.double({ gameId: gameState.id });
     setActing(false);
   };
+  const handleRedouble = async () => {
+    setActing(true);
+    await transport.redouble({ gameId: gameState.id });
+    setActing(false);
+  };
 
   const myPlayer  = gameState.players.find(p => p.id === myPlayerId);
   const myTeamId  = myPlayer?.teamId ?? 'A';
+
+  // Check if current player can double/redouble
+  const highBidPlayer = highBid ? gameState.players.find(p => p.id === highBid.playerId) : null;
+  const canDouble = highBid && highBid.type === 'bid' && highBidPlayer && highBidPlayer.teamId !== myTeamId;
+  const canRedouble = highBid && highBid.type === 'double' && highBidPlayer && highBidPlayer.teamId !== myTeamId;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -340,8 +354,11 @@ export default function DealAndBidScreen() {
 
               <View style={styles.actionRow}>
                 <Button label="Pass"   onPress={handlePass}   variant="ghost"     style={{ flex: 1 }} loading={acting} />
-                {highBid && (
+                {canDouble && (
                   <Button label="Double" onPress={handleDouble} variant="secondary" style={{ flex: 1 }} loading={acting} />
+                )}
+                {canRedouble && (
+                  <Button label="Redouble" onPress={handleRedouble} variant="secondary" style={{ flex: 1 }} loading={acting} />
                 )}
                 <Button label={`Bid ${selectedAmount}`} onPress={handleBid} style={{ flex: 2 }} loading={acting} />
               </View>
