@@ -67,38 +67,69 @@ npm test -- --coverage          # with V8 coverage report
 ```
  Test Files  7 passed (7)
       Tests  130 passed (130)
-   Duration  ~700ms
+   Duration  ~724ms
 ```
 
-| Test file              | Tests | Covers |
-|------------------------|-------|--------|
-| BiddingEngine.test.ts  | 24    | BiddingEngine |
-| Deck.test.ts           | 11    | Deck model |
-| TrickEngine.test.ts    | 11    | TrickEngine |
-| ScoringEngine.test.ts  | 15    | ScoringEngine |
-| Dealer.test.ts         | 16    | Dealer |
-| AIPlayer.test.ts       | 12    | AIPlayer (decideBid, decidePlay) |
-| GameEngine.test.ts     | 36    | GameEngine (full lifecycle) |
-| **Total**              | **130** | |
+| Test file             | Tests | What is covered |
+|-----------------------|-------|-----------------|
+| BiddingEngine.test.ts | 24    | Bid range (4p/6p), turn order, raise/double/redouble, all-pass completion |
+| ScoringEngine.test.ts | 15    | Success/failure, table tiers, doubles, finalTeamPoints snapshot |
+| TrickEngine.test.ts   | 11    | Play validation, trump resolution, rank order, point calculation |
+| Deck.test.ts          | 11    | 1-deck/2-deck build, unique IDs, point totals, shuffle immutability |
+| Dealer.test.ts        | 16    | Hand distribution per player count, firstBidderSeatIndex, nextAnticlockwise |
+| AIPlayer.test.ts      | 12    | decideBid range (4p 14–28 / 6p 28–56), trump selection, decidePlay strategy |
+| GameEngine.test.ts    | 36    | createGame → startBidding → placeBid → playCard → scoreRoundAndAdvance |
+| **Total**             | **130** | |
 
-### Coverage (engine + model layer)
+### Coverage Report (2026-04-18)
 
 ```
-File               | % Stmts | % Branch | % Funcs | % Lines
--------------------|---------|----------|---------|---------
-src/engine         |   100   |   89.94  |   100   |   100
-  BiddingEngine.ts |   100   |   95.00  |   100   |   100
-  Dealer.ts        |   100   |  100.00  |   100   |   100
-  GameEngine.ts    |   100   |   87.27  |   100   |   100
-  ScoringEngine.ts |   100   |   85.18  |   100   |   100
-  TrickEngine.ts   |   100   |   90.69  |   100   |   100
-src/models         |   100   |  100.00  |   100   |   100
-  Card.ts          |   100   |  100.00  |   100   |   100
-  Deck.ts          |   100   |  100.00  |   100   |   100
-src/ai/AIPlayer.ts |  97.50  |   85.71  |   100   |  97.50
+-------------------|---------|----------|---------|---------|--------------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered lines
+-------------------|---------|----------|---------|---------|--------------------------
+All files          |   39.66 |    85.76 |   77.27 |   39.66 |
+ src/ai            |         |          |         |         |
+  AIPersonas.ts    |    0.00 |     0.00 |    0.00 |    0.00 | 1-38 (runtime only)
+  AIPlayer.ts      |   97.50 |    85.71 |  100.00 |   97.50 | 91, 105, 114
+ src/engine        |  100.00 |    89.94 |  100.00 |  100.00 |
+  BiddingEngine.ts |  100.00 |    95.00 |  100.00 |  100.00 | 42, 46
+  Dealer.ts        |  100.00 |   100.00 |  100.00 |  100.00 |
+  GameEngine.ts    |  100.00 |    87.27 |  100.00 |  100.00 | 69, 78, 95, 104, 113, 116-129
+  ScoringEngine.ts |  100.00 |    85.18 |  100.00 |  100.00 | 21-30, 46
+  TrickEngine.ts   |  100.00 |    90.69 |  100.00 |  100.00 | 14, 38, 67, 76
+ src/models        |  100.00 |   100.00 |  100.00 |  100.00 |
+  Card.ts          |  100.00 |   100.00 |  100.00 |  100.00 |
+  Deck.ts          |  100.00 |   100.00 |  100.00 |  100.00 |
+ src/rooms         |    0.00 |     0.00 |    0.00 |    0.00 | (integration only)
+  GameRoom.ts      |    0.00 |     0.00 |    0.00 |    0.00 | 1-510
+  RoomManager.ts   |    0.00 |     0.00 |    0.00 |    0.00 | 1-66
+ src/sockets       |    0.00 |     0.00 |    0.00 |    0.00 | (integration only)
+  gameHandlers.ts  |    0.00 |     0.00 |    0.00 |    0.00 | 1-182
+  roomHandlers.ts  |    0.00 |     0.00 |    0.00 |    0.00 | 1-92
+  socketServer.ts  |    0.00 |     0.00 |    0.00 |    0.00 | 1-34
+  eventNames.ts    |    0.00 |     0.00 |    0.00 |    0.00 | 1-34
+ src/utils         |    0.00 |     0.00 |    0.00 |    0.00 |
+  logger.ts        |    0.00 |     0.00 |    0.00 |    0.00 | 1-8 (runtime only)
+-------------------|---------|----------|---------|---------|--------------------------
 ```
 
-> Socket/room layer (`src/rooms`, `src/sockets`) is integration-only and excluded from unit coverage — it requires a live Socket.io server.
+**Engine + model layer: 100% statement coverage, 87–100% branch coverage.**
+
+The overall 39.66% figure reflects the socket/room layer which requires a live Socket.io
+server and cannot be exercised by unit tests. All pure game logic is fully covered.
+
+#### Uncovered branches (engine layer)
+
+| File | Lines | Reason |
+|------|-------|--------|
+| BiddingEngine.ts | 42, 46 | `BIDDING_COMPLETE` guard and `amount ?? 0` fallback — unreachable via `GameEngine` which validates phase first |
+| GameEngine.ts | 69, 78, 95, 104 | `dealer?.id ?? fallback` and `bidder?.seatIndex ?? fallback` — players always present after `createGame` |
+| GameEngine.ts | 113, 116–129 | `winner` null-guard inside trick resolution — winner is always found when trick cards equal playerCount |
+| ScoringEngine.ts | 21–30, 46 | `bidder?.teamId ?? 'A'` fallback and `roundPoints: 0` reset path in success branch |
+| TrickEngine.ts | 14, 38, 67, 76 | Optional-chaining guards on always-present trick/player fields |
+| AIPlayer.ts | 91, 105, 114 | `decidePlay` fallback paths when trick has no cards yet (only called mid-trick) |
+
+> Socket/room layer (`src/rooms`, `src/sockets`) requires a live Socket.io server and is excluded from unit coverage.
 
 ## Key Design Decisions
 

@@ -80,17 +80,31 @@ npm test -- --coverage          # with V8 coverage report
 
 **Test results (2026-04-18): 130 / 130 passing across 7 suites, 0 failures.**
 
-| Suite | Tests | Covers |
-|-------|-------|--------|
-| BiddingEngine | 24 | Bid range (4p: 14–28, 6p: 28–56), turn order, double/redouble, all-pass |
-| ScoringEngine | 15 | Success/failure, table changes, doubles, finalTeamPoints snapshot |
-| TrickEngine   | 11 | Play validation, trump resolution, point calculation |
-| Deck          | 11 | 1-deck/2-deck, unique IDs, point totals, shuffle immutability |
-| Dealer        | 16 | Hand distribution, firstBidder, nextAnticlockwise wrapping |
-| AIPlayer      | 12 | Bid range per playerCount, trump selection, play strategy |
-| GameEngine    | 36 | Full lifecycle: createGame → bidding → playing → scoring → winner |
+| Suite                 | Tests | Covers |
+|-----------------------|-------|--------|
+| BiddingEngine.test.ts | 24    | Bid range (4p: 14–28, 6p: 28–56), turn order, double/redouble, all-pass |
+| ScoringEngine.test.ts | 15    | Success/failure, table changes, doubles, finalTeamPoints snapshot |
+| TrickEngine.test.ts   | 11    | Play validation, trump resolution, point calculation |
+| Deck.test.ts          | 11    | 1-deck/2-deck, unique IDs, point totals, shuffle immutability |
+| Dealer.test.ts        | 16    | Hand distribution, firstBidder, nextAnticlockwise wrapping |
+| AIPlayer.test.ts      | 12    | Bid range per playerCount, trump selection, play strategy |
+| GameEngine.test.ts    | 36    | Full lifecycle: createGame → bidding → playing → scoring → winner |
 
-Engine layer statement coverage: **100%**. Branch coverage: **87–100%** per file.
+### Engine Layer Coverage
+
+```
+File               | % Stmts | % Branch | % Funcs | % Lines
+-------------------|---------|----------|---------|--------
+BiddingEngine.ts   |  100.00 |    95.00 |  100.00 | 100.00
+Dealer.ts          |  100.00 |   100.00 |  100.00 | 100.00
+GameEngine.ts      |  100.00 |    87.27 |  100.00 | 100.00
+ScoringEngine.ts   |  100.00 |    85.18 |  100.00 | 100.00
+TrickEngine.ts     |  100.00 |    90.69 |  100.00 | 100.00
+Card.ts / Deck.ts  |  100.00 |   100.00 |  100.00 | 100.00
+AIPlayer.ts        |   97.50 |    85.71 |  100.00 |  97.50
+```
+
+> The socket/room layer requires a live Socket.io server; it is excluded from unit coverage. See [fifty-six-server/README.md](fifty-six-server/README.md) for the full coverage table with uncovered line annotations.
 
 ### App
 
