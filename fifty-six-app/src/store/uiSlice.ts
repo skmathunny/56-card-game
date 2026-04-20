@@ -13,6 +13,7 @@ interface UIStore {
   setRoundSummaryVisible(visible: boolean): void;
   showTrickHistoryVote(prompt: { requestingPlayerName: string }): void;
   dismissTrickHistoryVote(): void;
+  resetUI(): void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -44,5 +45,15 @@ export const useUIStore = create<UIStore>((set) => ({
 
   dismissTrickHistoryVote() {
     set({ trickHistoryVotePrompt: null });
+  },
+
+  resetUI() {
+    set({
+      selectedCardId: null,
+      isChatOpen: false,
+      isTrickHistoryOpen: false,
+      isRoundSummaryVisible: false,
+      trickHistoryVotePrompt: null,
+    });
   },
 }));
