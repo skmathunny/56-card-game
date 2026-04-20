@@ -20,26 +20,34 @@ import EndGameScreen   from '../screens/EndGameScreen';
 
 const Stack = createNativeStackNavigator();
 
+// Wrapper component to enable music hook inside NavigationContainer
+function StackNavigator() {
+  useBackgroundMusic(); // Must be inside NavigationContainer
+  
+  return (
+    <Stack.Navigator initialRouteName={ROUTES.SPLASH} screenOptions={{ headerShown: false }}>
+      <Stack.Screen name={ROUTES.SPLASH}        component={SplashScreen} />
+      <Stack.Screen name={ROUTES.LOGIN}         component={LoginScreen} />
+      <Stack.Screen name={ROUTES.PROFILE_SETUP} component={ProfileSetupScreen} />
+      <Stack.Screen name={ROUTES.HOME}          component={HomeScreen} />
+      <Stack.Screen name={ROUTES.PROFILE}       component={ProfileScreen} />
+      <Stack.Screen name={ROUTES.CREATE_ROOM}   component={CreateRoomScreen} />
+      <Stack.Screen name={ROUTES.JOIN_ROOM}     component={JoinRoomScreen} />
+      <Stack.Screen name={ROUTES.WAITING_ROOM}  component={WaitingRoomScreen} />
+      <Stack.Screen name={ROUTES.DEAL_AND_BID}  component={DealAndBidScreen} />
+      <Stack.Screen name={ROUTES.PLAY}          component={PlayScreen} />
+      <Stack.Screen name={ROUTES.ROUND_SUMMARY} component={RoundSummaryScreen} />
+      <Stack.Screen name={ROUTES.END_GAME}      component={EndGameScreen} />
+    </Stack.Navigator>
+  );
+}
+
 export default function RootNavigator() {
   useSocket();
-  useBackgroundMusic(); // Initialize background music
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={ROUTES.SPLASH} screenOptions={{ headerShown: false }}>
-        <Stack.Screen name={ROUTES.SPLASH}        component={SplashScreen} />
-        <Stack.Screen name={ROUTES.LOGIN}         component={LoginScreen} />
-        <Stack.Screen name={ROUTES.PROFILE_SETUP} component={ProfileSetupScreen} />
-        <Stack.Screen name={ROUTES.HOME}          component={HomeScreen} />
-        <Stack.Screen name={ROUTES.PROFILE}       component={ProfileScreen} />
-        <Stack.Screen name={ROUTES.CREATE_ROOM}   component={CreateRoomScreen} />
-        <Stack.Screen name={ROUTES.JOIN_ROOM}     component={JoinRoomScreen} />
-        <Stack.Screen name={ROUTES.WAITING_ROOM}  component={WaitingRoomScreen} />
-        <Stack.Screen name={ROUTES.DEAL_AND_BID}  component={DealAndBidScreen} />
-        <Stack.Screen name={ROUTES.PLAY}          component={PlayScreen} />
-        <Stack.Screen name={ROUTES.ROUND_SUMMARY} component={RoundSummaryScreen} />
-        <Stack.Screen name={ROUTES.END_GAME}      component={EndGameScreen} />
-      </Stack.Navigator>
+      <StackNavigator />
     </NavigationContainer>
   );
 }
