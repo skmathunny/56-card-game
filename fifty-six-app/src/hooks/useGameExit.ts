@@ -29,15 +29,21 @@ export function useGameExit() {
     setIsLoading(true);
     try {
       // Notify server that player is leaving the round
-      if (roomId) {
-        console.log('🔄 exitRound: Notifying server...');
-        await transport.leaveRound?.({ roomId });
+      if (roomId && transport.leaveRound) {
+        try {
+          console.log('🔄 exitRound: Notifying server...');
+          await transport.leaveRound({ roomId });
+          console.log('✅ exitRound: Server notified');
+        } catch (serverError) {
+          console.warn('⚠️ Server error, continuing anyway:', serverError);
+        }
       }
       
       // Clear game state but keep lobby
       console.log('🔄 exitRound: Clearing game state...');
       clearGame();
       resetUI();
+      console.log('✅ exitRound: State cleared');
       
       // Navigate back to waiting room
       console.log('🔄 exitRound: Navigating to waiting room...');
@@ -45,7 +51,6 @@ export function useGameExit() {
       console.log('✅ exitRound: Complete');
     } catch (error) {
       console.error('❌ Error exiting round:', error);
-    } finally {
       setIsLoading(false);
     }
   }, [roomId, transport, clearGame, resetUI, navigation]);
@@ -58,9 +63,14 @@ export function useGameExit() {
     setIsLoading(true);
     try {
       // Notify server that player is leaving the game
-      if (roomId) {
-        console.log('🚪 exitGame: Notifying server...');
-        await transport.leaveGame?.({ roomId });
+      if (roomId && transport.leaveGame) {
+        try {
+          console.log('🚪 exitGame: Notifying server...');
+          await transport.leaveGame({ roomId });
+          console.log('✅ exitGame: Server notified');
+        } catch (serverError) {
+          console.warn('⚠️ Server error, continuing anyway:', serverError);
+        }
       }
       
       // Clear all game and lobby state
@@ -68,6 +78,7 @@ export function useGameExit() {
       clearGame();
       clearLobby();
       resetUI();
+      console.log('✅ exitGame: State cleared');
       
       // Navigate back to home
       console.log('🚪 exitGame: Navigating to home...');
@@ -88,11 +99,14 @@ export function useGameExit() {
     setIsLoading(true);
     try {
       // Try to notify server of logout
-      if (roomId) {
-        console.log('🚪 logout: Notifying server...');
-        await transport.leaveGame?.({ roomId }).catch(() => {
-          // Ignore errors on logout
-        });
+      if (roomId && transport.leaveGame) {
+        try {
+          console.log('🚪 logout: Notifying server...');
+          await transport.leaveGame({ roomId });
+          console.log('✅ logout: Server notified');
+        } catch (serverError) {
+          console.warn('⚠️ Server error, continuing anyway:', serverError);
+        }
       }
       
       // Clear all state
@@ -100,11 +114,17 @@ export function useGameExit() {
       clearGame();
       clearLobby();
       resetUI();
+      console.log('✅ logout: State cleared');
       
       // Disconnect socket
       if (transport.disconnect) {
-        console.log('🚪 logout: Disconnecting socket...');
-        await transport.disconnect();
+        try {
+          console.log('🚪 logout: Disconnecting socket...');
+          await transport.disconnect();
+          console.log('✅ logout: Socket disconnected');
+        } catch (disconnectError) {
+          console.warn('⚠️ Disconnect error, continuing anyway:', disconnectError);
+        }
       }
       
       // Navigate to login
@@ -114,9 +134,15 @@ export function useGameExit() {
     } catch (error) {
       console.error('❌ Error during logout:', error);
       // Force navigation to login even if there were errors
-      navigation.replace(ROUTES.LOGIN);
+      try {
+        navigation.replace(ROUTES.LOGIN);
+      } catch (navError) {
+        console.error('❌ Navigation error:', navError);
+      }
     } finally {
       setIsLoading(false);
+    }
+  }, [roomId, transport, clearGame, clearLobby, resetUI, navigation]);
     }
   }, [roomId, transport, clearGame, clearLobby, resetUI, navigation]);
 
