@@ -55,6 +55,19 @@ export class OfflineTransport implements GameTransport {
     this.room = null;
   }
 
+  async leaveRound(_payload: { roomId: string }) {
+    // In offline mode, just clear the current game state
+    // The room stays active for potential rematch
+    return { success: true };
+  }
+
+  async leaveGame(_payload: { roomId: string }) {
+    // In offline mode, completely destroy the room
+    this.room?.destroy();
+    this.room = null;
+    return { success: true };
+  }
+
   async addAI(payload: { roomId: string; seatIndex: number }) {
     this.room?.addAI(payload.seatIndex);
     return { success: true };

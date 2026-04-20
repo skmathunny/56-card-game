@@ -2,6 +2,8 @@
 export const CLIENT_EVENTS = {
   JOIN_ROOM:             'join-room',
   LEAVE_ROOM:            'leave-room',
+  LEAVE_ROUND:           'leave-round',
+  LEAVE_GAME:            'leave-game',
   ADD_AI:                'add-ai',
   REMOVE_AI:             'remove-ai',
   START_GAME:            'start-game',

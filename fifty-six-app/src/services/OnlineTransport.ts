@@ -28,6 +28,18 @@ export class OnlineTransport implements GameTransport {
     this.socket.emit(CLIENT_EVENTS.LEAVE_ROOM, payload);
   }
 
+  async leaveRound(payload: { roomId: string }) {
+    return this.emit<{ success: boolean }>(CLIENT_EVENTS.LEAVE_ROUND, payload);
+  }
+
+  async leaveGame(payload: { roomId: string }) {
+    return this.emit<{ success: boolean }>(CLIENT_EVENTS.LEAVE_GAME, payload);
+  }
+
+  async disconnect() {
+    this.socket.disconnect();
+  }
+
   addAI(payload: { roomId: string; seatIndex: number }) {
     return this.emit<{ success: boolean }>(CLIENT_EVENTS.ADD_AI, payload);
   }

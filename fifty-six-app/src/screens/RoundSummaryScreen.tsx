@@ -6,7 +6,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../constants/theme';
 import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
+import { ExitMenu } from '../components/common/ExitMenu';
 import { useGameStore } from '../store/gameSlice';
+import { useGameExit } from '../hooks/useGameExit';
 import { useUIStore } from '../store/uiSlice';
 import { SUIT_SYMBOLS } from '../constants/cards';
 import type { Suit } from '../constants/cards';
@@ -19,7 +21,9 @@ export default function RoundSummaryScreen() {
   const navigation  = useNavigation<Nav>();
   const { roundSummary, roundHistory, gameState, clearRoundSummary } = useGameStore();
   const { setRoundSummaryVisible } = useUIStore();
+  const { exitGame, logout, isLoading } = useGameExit();
   const [tricksExpanded, setTricksExpanded] = useState(false);
+  const [showExitMenu, setShowExitMenu] = useState(false);
 
   const handleContinue = () => {
     clearRoundSummary();
@@ -45,6 +49,13 @@ export default function RoundSummaryScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* Header with menu button */}
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
+        <TouchableOpacity onPress={() => setShowExitMenu(true)} style={{ padding: Spacing.sm }}>
+          <Text style={{ fontSize: FontSize.large }}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+      
       <ScrollView contentContainerStyle={styles.container}>
         {/* Result banner */}
         <View style={[styles.resultBanner, roundSummary.success ? styles.successBanner : styles.failBanner]}>
@@ -206,6 +217,17 @@ export default function RoundSummaryScreen() {
 
         <Button label="Next Round" onPress={handleContinue} fullWidth size="lg" />
       </ScrollView>
+
+      {/* Exit menu */}
+      <ExitMenu
+        visible={showExitMenu}
+        isLoading={isLoading}
+        canExitRound={false}
+        canExitGame={true}
+        onExitGame={exitGame}
+        onLogout={logout}
+        onClose={() => setShowExitMenu(false)}
+      />
     </SafeAreaView>
   );
 }

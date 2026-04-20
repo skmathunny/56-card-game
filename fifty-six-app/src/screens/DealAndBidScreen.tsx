@@ -15,7 +15,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../constants/theme';
 import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
+import { ExitMenu } from '../components/common/ExitMenu';
 import { useTransport } from '../services/transportContext';
+import { useGameExit } from '../hooks/useGameExit';
 import { useGameStore } from '../store/gameSlice';
 import { useLobbyStore } from '../store/lobbySlice';
 import { SUIT_SYMBOLS } from '../constants/cards';
@@ -112,6 +114,7 @@ export default function DealAndBidScreen() {
   const transport  = useTransport();
   const { gameState, myHand } = useGameStore();
   const { myPlayerId, settings } = useLobbyStore();
+  const { exitRound, exitGame, logout, isLoading } = useGameExit();
   const deckId = settings?.deckId;
   const deckTheme = getDeckTheme(deckId);
 
@@ -123,6 +126,7 @@ export default function DealAndBidScreen() {
   const [acting, setActing]                 = useState(false);
   const [handHeight, setHandHeight]         = useState(0);
   const [timeLeft, setTimeLeft]             = useState(BID_TIMER_SECONDS);
+  const [showExitMenu, setShowExitMenu]     = useState(false);
 
   const cardHeight = handHeight > 0 ? Math.min(handHeight * 0.82, 220) : 76;
   const cardWidth  = cardHeight * (52 / 76);
@@ -219,6 +223,13 @@ export default function DealAndBidScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+
+      {/* ── Header with menu button ── */}
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
+        <TouchableOpacity onPress={() => setShowExitMenu(true)} style={{ padding: Spacing.sm }}>
+          <Text style={{ fontSize: FontSize.large }}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* ── Teams + avatars + timer ── */}
       <View style={styles.teamsPanel}>
@@ -379,6 +390,18 @@ export default function DealAndBidScreen() {
       {gameState.phase === 'scoring' && (
         <View style={styles.waitingWrap}><Text style={styles.waitingText}>Preparing next round…</Text></View>
       )}
+
+      {/* Exit menu */}
+      <ExitMenu
+        visible={showExitMenu}
+        isLoading={isLoading}
+        canExitRound={true}
+        canExitGame={true}
+        onExitRound={exitRound}
+        onExitGame={exitGame}
+        onLogout={logout}
+        onClose={() => setShowExitMenu(false)}
+      />
     </SafeAreaView>
   );
 }

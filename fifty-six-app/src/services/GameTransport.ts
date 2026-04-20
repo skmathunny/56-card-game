@@ -22,6 +22,8 @@ export interface PlayCardPayload {
 export interface GameTransport {
   joinRoom(payload: JoinRoomPayload): Promise<{ room: any; yourPlayer: any }>;
   leaveRoom(payload: { roomId: string }): void;
+  leaveRound?(payload: { roomId: string }): Promise<{ success: boolean }>;
+  leaveGame?(payload: { roomId: string }): Promise<{ success: boolean }>;
   addAI(payload: { roomId: string; seatIndex: number }): Promise<{ success: boolean }>;
   removeAI(payload: { roomId: string; seatIndex: number }): Promise<{ success: boolean }>;
   startGame(payload: { roomId: string }): Promise<{ success: boolean }>;
@@ -33,6 +35,7 @@ export interface GameTransport {
   requestTrickHistory(payload: { gameId: string }): void;
   voteTrickHistory(payload: { gameId: string; vote: boolean }): void;
   sendMessage(payload: { roomId: string; message: string }): void;
+  disconnect?(): Promise<void>;
   on(event: ServerEvent, handler: (data: any) => void): void;
   off(event: ServerEvent, handler: (data: any) => void): void;
   dispose(): void;
