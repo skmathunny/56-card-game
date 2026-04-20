@@ -83,7 +83,7 @@ export class GameRoom {
       hand: [],
     };
 
-    this.roomPlayers.push({ socketId: socket.data.playerId ?? socket.id, player });
+    this.roomPlayers.push({ socketId: socket.id, player });
     socket.join(this.id);
     socket.data.roomId = this.id;
     socket.data.playerId = player.id;
