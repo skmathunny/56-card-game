@@ -4,17 +4,11 @@ import { useRoute } from '@react-navigation/native';
 import { ROUTES } from '../navigation/routes';
 import { useMusicStore } from '../store/musicSlice';
 
-// Music track URIs - replace with your own audio files
-// To add custom music:
-// 1. Place MP3 files in assets/music/ folder
-// 2. Name them: landing-music.mp3, room-selection-music.mp3, gameplay-music.mp3
-// 3. The hook will automatically load and play them
-//
-// For now, these require() statements will fail gracefully and music will be skipped
+// Music track URIs - Default royalty-free music
 const MUSIC_TRACKS = {
-  landing: require('../../assets/music/landing-music.mp3').default ?? null,
-  roomSelection: require('../../assets/music/room-selection-music.mp3').default ?? null,
-  gameplay: require('../../assets/music/gameplay-music.mp3').default ?? null,
+  landing: require('../../assets/music/landing-music.mp3'),
+  roomSelection: require('../../assets/music/room-selection-music.mp3'),
+  gameplay: require('../../assets/music/gameplay-music.mp3'),
 };
 
 // Screen categorization
@@ -58,10 +52,10 @@ export function useBackgroundMusic() {
         shouldDuckAndroid: true,
       });
 
-      // Preload all sounds that are available
+      // Preload all sounds
       const sections: MusicSection[] = ['landing', 'roomSelection', 'gameplay'];
       for (const section of sections) {
-        if (section && MUSIC_TRACKS[section]) {
+        if (section) {
           try {
             const sound = new Audio.Sound();
             await sound.loadAsync(MUSIC_TRACKS[section]);
@@ -69,10 +63,8 @@ export function useBackgroundMusic() {
             soundRefs.current[section] = sound;
             console.log(`✓ Loaded ${section} background music`);
           } catch (error) {
-            console.warn(`⚠️  Could not load ${section} music - file not found. Add MP3 file to assets/music/ folder.`);
+            console.warn(`⚠️  Could not load ${section} music:`, error);
           }
-        } else {
-          console.info(`ℹ️  ${section} music not configured`);
         }
       }
       isInitializedRef.current = true;
