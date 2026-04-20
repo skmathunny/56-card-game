@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Audio } from 'expo-av';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { ROUTES } from '../navigation/routes';
 import { useMusicStore } from '../store/musicSlice';
 
@@ -24,7 +24,7 @@ type MusicSection = 'landing' | 'roomSelection' | 'gameplay' | null;
  * Handles fade in/out transitions
  */
 export function useBackgroundMusic() {
-  const route = useRoute();
+  const navigation = useNavigation();
   const soundRefs = useRef<{ [key in MusicSection]: Audio.Sound | null }>({
     landing: null,
     roomSelection: null,
@@ -33,10 +33,10 @@ export function useBackgroundMusic() {
   });
   const currentSectionRef = useRef<MusicSection>(null);
   const isInitializedRef = useRef(false);
+  const currentRouteRef = useRef<string>('');
 
-  // Determine which section the current screen belongs to
-  const getCurrentSection = (): MusicSection => {
-    const routeName = route.name as string;
+  // Determine which section a route belongs to
+  const getSection = (routeName: string): MusicSection => {
     if (LANDING_SCREENS.includes(routeName)) return 'landing';
     if (ROOM_SELECTION_SCREENS.includes(routeName)) return 'roomSelection';
     if (GAMEPLAY_SCREENS.includes(routeName)) return 'gameplay';
@@ -140,18 +140,30 @@ export function useBackgroundMusic() {
     currentSectionRef.current = newSection;
   };
 
-  // Initialize on mount
+  // Initialize on mount and setup navigation listener
   useEffect(() => {
     if (!isInitializedRef.current) {
       initializeAudio();
     }
-  }, []);
 
-  // Switch music when route changes
-  useEffect(() => {
-    const newSection = getCurrentSection();
-    switchMusic(newSection);
-  }, [route.name]);
+    // Listen for navigation changes
+    const unsubscribe = navigation.addListener('state', () => {
+      // Get the current route from navigation state
+      const state = (navigation as any).getState?.();
+      if (state?.routes?.length > 0) {
+        const currentRoute = state.routes[state.index];
+        const newRouteName = currentRoute?.name;
+        
+        if (newRouteName && newRouteName !== currentRouteRef.current) {
+          currentRouteRef.current = newRouteName;
+          const newSection = getSection(newRouteName);
+          switchMusic(newSection);
+        }
+      }
+    });
+
+    return () => unsubscribe?.();
+  }, [navigation]);
 
   // Cleanup on unmount
   useEffect(() => {
