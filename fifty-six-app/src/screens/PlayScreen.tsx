@@ -74,6 +74,23 @@ export default function PlayScreen() {
     if (gameState?.phase === 'complete') navigation.replace(ROUTES.END_GAME);
   }, [gameState?.phase]);
 
+  // Check whose turn it is
+  const isMyTurn =
+    gameState?.phase === 'playing' &&
+    gameState?.players[gameState.currentPlayerSeatIndex]?.id === myPlayerId;
+
+  // Legal cards: server sends full public state; we highlight based on led suit
+  const ledSuit    = gameState?.currentTrick?.ledSuit;
+  const handHasSuit = ledSuit
+    ? myHand.some((c) => c.suit === ledSuit)
+    : false;
+  const isLegal = (card: Card) => {
+    if (!isMyTurn) return true;
+    if (!ledSuit) return true;
+    if (!handHasSuit) return true;
+    return card.suit === ledSuit;
+  };
+
   // Play timer — resets each time the current player changes
   const { settings } = useLobbyStore();
   const playTimerSeconds = settings?.playTimerSeconds ?? 30;
@@ -109,22 +126,6 @@ export default function PlayScreen() {
       </View>
     );
   }
-
-  const isMyTurn =
-    gameState.phase === 'playing' &&
-    gameState.players[gameState.currentPlayerSeatIndex]?.id === myPlayerId;
-
-  // Legal cards: server sends full public state; we highlight based on led suit
-  const ledSuit    = gameState.currentTrick?.ledSuit;
-  const handHasSuit = ledSuit
-    ? myHand.some((c) => c.suit === ledSuit)
-    : false;
-  const isLegal = (card: Card) => {
-    if (!isMyTurn) return true;
-    if (!ledSuit) return true;
-    if (!handHasSuit) return true;
-    return card.suit === ledSuit;
-  };
 
   const handleCardPress = async (card: Card) => {
     if (!isMyTurn) return;
