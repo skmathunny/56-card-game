@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ROUTES } from './routes';
 import { useSocket } from '../hooks/useSocket';
+import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
 
 import SplashScreen    from '../screens/SplashScreen';
 import LoginScreen     from '../screens/LoginScreen';
@@ -21,6 +22,8 @@ const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
   useSocket();
+  useBackgroundMusic(); // Initialize background music
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={ROUTES.SPLASH} screenOptions={{ headerShown: false }}>
