@@ -143,8 +143,6 @@ export function useGameExit() {
       setIsLoading(false);
     }
   }, [roomId, transport, clearGame, clearLobby, resetUI, navigation]);
-    }
-  }, [roomId, transport, clearGame, clearLobby, resetUI, navigation]);
 
   return {
     isLoading,
