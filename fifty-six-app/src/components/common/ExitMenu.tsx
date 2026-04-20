@@ -13,9 +13,9 @@ import { Colors, FontSize, FontWeight, Spacing, Radius } from '../../constants/t
 export interface ExitMenuProps {
   visible: boolean;
   onClose: () => void;
-  onExitRound?: () => void;      // Leave current round, back to waiting room
-  onExitGame?: () => void;       // Leave game entirely
-  onLogout: () => void;          // Logout from app
+  onExitRound?: () => Promise<void> | void;      // Leave current round, back to waiting room
+  onExitGame?: () => Promise<void> | void;       // Leave game entirely
+  onLogout: () => Promise<void> | void;          // Logout from app
   canExitRound?: boolean;        // Show exit round option
   canExitGame?: boolean;         // Show exit game option
   isLoading?: boolean;           // Show loading indicator
@@ -41,21 +41,31 @@ export function ExitMenu({
   const [confirming, setConfirming] = useState<'round' | 'game' | 'logout' | null>(null);
 
   const handleExitRound = () => {
-    console.log('Menu: Exit Round tapped, showing confirmation...');
+    console.log('🎯 Menu: Exit Round tapped, showing confirmation...');
     setConfirming('round');
     Alert.alert('Exit Round?', 'You will leave this round and return to the waiting room.', [
       { text: 'Cancel', onPress: () => {
-        console.log('Menu: Exit Round cancelled');
+        console.log('🎯 Menu: Exit Round cancelled');
         setConfirming(null);
       }},
       {
         text: 'Exit Round',
-        onPress: () => {
-          console.log('Menu: Exit Round confirmed, calling handler...');
+        onPress: async () => {
+          console.log('🎯 Menu: Exit Round confirmed, calling handler...');
           setConfirming(null);
-          // Call handler without awaiting - parent manages isLoading state
-          onExitRound?.();
-          // Don't close - let navigation handle it after operation completes
+          try {
+            const result = onExitRound?.();
+            if (result && typeof result.then === 'function') {
+              console.log('🎯 Menu: Awaiting async handler...');
+              await result;
+              console.log('🎯 Menu: Handler completed');
+            } else {
+              console.log('🎯 Menu: Handler is sync');
+            }
+          } catch (error) {
+            console.error('🎯 Menu: Handler error:', error);
+            Alert.alert('Error', 'An error occurred: ' + (error instanceof Error ? error.message : String(error)));
+          }
         },
         style: 'destructive',
       },
@@ -63,19 +73,31 @@ export function ExitMenu({
   };
 
   const handleExitGame = () => {
-    console.log('Menu: Exit Game tapped, showing confirmation...');
+    console.log('🎯 Menu: Exit Game tapped, showing confirmation...');
     setConfirming('game');
     Alert.alert('Exit Game?', 'You will leave this game and return to the home screen.', [
       { text: 'Cancel', onPress: () => {
-        console.log('Menu: Exit Game cancelled');
+        console.log('🎯 Menu: Exit Game cancelled');
         setConfirming(null);
       }},
       {
         text: 'Exit Game',
-        onPress: () => {
-          console.log('Menu: Exit Game confirmed, calling handler...');
+        onPress: async () => {
+          console.log('🎯 Menu: Exit Game confirmed, calling handler...');
           setConfirming(null);
-          onExitGame?.();
+          try {
+            const result = onExitGame?.();
+            if (result && typeof result.then === 'function') {
+              console.log('🎯 Menu: Awaiting async handler...');
+              await result;
+              console.log('🎯 Menu: Handler completed');
+            } else {
+              console.log('🎯 Menu: Handler is sync');
+            }
+          } catch (error) {
+            console.error('🎯 Menu: Handler error:', error);
+            Alert.alert('Error', 'An error occurred: ' + (error instanceof Error ? error.message : String(error)));
+          }
         },
         style: 'destructive',
       },
@@ -83,19 +105,31 @@ export function ExitMenu({
   };
 
   const handleLogout = () => {
-    console.log('Menu: Logout tapped, showing confirmation...');
+    console.log('🎯 Menu: Logout tapped, showing confirmation...');
     setConfirming('logout');
     Alert.alert('Logout?', 'You will be logged out from the app.', [
       { text: 'Cancel', onPress: () => {
-        console.log('Menu: Logout cancelled');
+        console.log('🎯 Menu: Logout cancelled');
         setConfirming(null);
       }},
       {
         text: 'Logout',
-        onPress: () => {
-          console.log('Menu: Logout confirmed, calling handler...');
+        onPress: async () => {
+          console.log('🎯 Menu: Logout confirmed, calling handler...');
           setConfirming(null);
-          onLogout();
+          try {
+            const result = onLogout();
+            if (result && typeof result.then === 'function') {
+              console.log('🎯 Menu: Awaiting async handler...');
+              await result;
+              console.log('🎯 Menu: Handler completed');
+            } else {
+              console.log('🎯 Menu: Handler is sync');
+            }
+          } catch (error) {
+            console.error('🎯 Menu: Handler error:', error);
+            Alert.alert('Error', 'An error occurred: ' + (error instanceof Error ? error.message : String(error)));
+          }
         },
         style: 'destructive',
       },
