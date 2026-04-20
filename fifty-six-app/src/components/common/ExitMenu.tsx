@@ -41,15 +41,21 @@ export function ExitMenu({
   const [confirming, setConfirming] = useState<'round' | 'game' | 'logout' | null>(null);
 
   const handleExitRound = () => {
+    console.log('Menu: Exit Round tapped, showing confirmation...');
     setConfirming('round');
     Alert.alert('Exit Round?', 'You will leave this round and return to the waiting room.', [
-      { text: 'Cancel', onPress: () => setConfirming(null) },
+      { text: 'Cancel', onPress: () => {
+        console.log('Menu: Exit Round cancelled');
+        setConfirming(null);
+      }},
       {
         text: 'Exit Round',
         onPress: () => {
+          console.log('Menu: Exit Round confirmed, calling handler...');
           setConfirming(null);
+          // Call handler without awaiting - parent manages isLoading state
           onExitRound?.();
-          onClose();
+          // Don't close - let navigation handle it after operation completes
         },
         style: 'destructive',
       },
@@ -57,15 +63,19 @@ export function ExitMenu({
   };
 
   const handleExitGame = () => {
+    console.log('Menu: Exit Game tapped, showing confirmation...');
     setConfirming('game');
     Alert.alert('Exit Game?', 'You will leave this game and return to the home screen.', [
-      { text: 'Cancel', onPress: () => setConfirming(null) },
+      { text: 'Cancel', onPress: () => {
+        console.log('Menu: Exit Game cancelled');
+        setConfirming(null);
+      }},
       {
         text: 'Exit Game',
         onPress: () => {
+          console.log('Menu: Exit Game confirmed, calling handler...');
           setConfirming(null);
           onExitGame?.();
-          onClose();
         },
         style: 'destructive',
       },
@@ -73,15 +83,19 @@ export function ExitMenu({
   };
 
   const handleLogout = () => {
+    console.log('Menu: Logout tapped, showing confirmation...');
     setConfirming('logout');
     Alert.alert('Logout?', 'You will be logged out from the app.', [
-      { text: 'Cancel', onPress: () => setConfirming(null) },
+      { text: 'Cancel', onPress: () => {
+        console.log('Menu: Logout cancelled');
+        setConfirming(null);
+      }},
       {
         text: 'Logout',
         onPress: () => {
+          console.log('Menu: Logout confirmed, calling handler...');
           setConfirming(null);
           onLogout();
-          onClose();
         },
         style: 'destructive',
       },
