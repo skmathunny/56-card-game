@@ -34,6 +34,7 @@ const CreateRoomSchema = z.object({
   playerCount: z.union([z.literal(4), z.literal(6), z.literal(8)]),
   startingTables: z.number().int().min(1).max(50).default(12),
   bidTimerSeconds: z.number().int().min(10).max(120).default(30),
+  playTimerSeconds: z.number().int().min(10).max(120).default(30),
   expiryHours: z.number().min(1).max(24).default(4),
 });
 

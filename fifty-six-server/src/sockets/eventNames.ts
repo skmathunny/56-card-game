@@ -28,6 +28,7 @@ export const SERVER_EVENTS = {
   PLAYER_DISCONNECTED:            'player:disconnected',
   PLAYER_RECONNECTED:             'player:reconnected',
   PLAYER_AI_TAKEOVER:             'player:ai-takeover',
+  HOST_MIGRATED:                  'host:migrated',
 } as const;
 
 export type ClientEvent = typeof CLIENT_EVENTS[keyof typeof CLIENT_EVENTS];

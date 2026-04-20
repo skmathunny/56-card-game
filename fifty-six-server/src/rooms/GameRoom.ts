@@ -15,6 +15,7 @@ export interface RoomSettings {
   playerCount: 4 | 6 | 8;
   startingTables: number;
   bidTimerSeconds: number;
+  playTimerSeconds: number;
   expiryHours: number;
 }
 
@@ -339,7 +340,21 @@ export class GameRoom {
     const rp = this.roomPlayers.find(r => r.socketId === socketId);
     if (!rp) return;
 
+    // Migrate host role immediately if the disconnecting player was host
+    const wasHost = rp.player.isHost;
     rp.player.isConnected = false;
+
+    if (wasHost) {
+      const nextHost = this.roomPlayers.find(r => !r.player.isAI && r.player.id !== rp.player.id);
+      if (nextHost) {
+        nextHost.player.isHost = true;
+        this.io.to(this.id).emit(SERVER_EVENTS.HOST_MIGRATED, {
+          newHostId: nextHost.player.id,
+          newHostName: nextHost.player.displayName,
+        });
+      }
+    }
+
     this.io.to(this.id).emit(SERVER_EVENTS.PLAYER_DISCONNECTED, {
       playerId: rp.player.id,
       reconnectWindowSecs: config.reconnectWindowMs / 1000,

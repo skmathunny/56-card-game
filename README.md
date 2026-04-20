@@ -78,19 +78,19 @@ npm test -- --reporter=verbose  # verbose per-test output
 npm test -- --coverage          # with V8 coverage report
 ```
 
-**Test results (2026-04-19): 186 / 186 server · 19 / 19 app — 205 total, 0 failures.**
+**Test results (2026-04-19): 192 / 192 server · 19 / 19 app — 211 total, 0 failures.**
 
 #### Server (fifty-six-server) — Vitest
 
 | Suite                 | Tests | Covers |
 |-----------------------|-------|--------|
-| BiddingEngine.test.ts | 36    | Bid range (4p: 14–28, 6p/8p: 28–56), turn order, double/redouble, all-pass, 6p/8p completion |
+| BiddingEngine.test.ts | 38    | Bid range (4p: 14–28, 6p/8p: 28–56), turn order, double/redouble, all-pass, 6p/8p completion, bid preservation |
 | ScoringEngine.test.ts | 32    | Success/failure, table tiers, doubles/redoubles, B-bids, table clamping, roundPoints reset, winner edge cases |
 | TrickEngine.test.ts   | 11    | Play validation, trump resolution, point calculation |
 | Deck.test.ts          | 17    | 1-deck/2-deck, 8p 8-rank deck (64 cards), unique IDs, point totals, shuffle |
 | Dealer.test.ts        | 16    | Hand distribution, firstBidder, nextAnticlockwise wrapping |
 | AIPlayer.test.ts      | 12    | Bid range per playerCount, trump selection, play strategy |
-| GameEngine.test.ts    | 62    | Full lifecycle (4p/6p/8p), end game (A/B wins, 56-wipe-out, double elimination, phase lock, winner persistence), new game reset |
+| GameEngine.test.ts    | 66    | Full lifecycle (4p/6p/8p), end game (A/B wins, 56-wipe-out, double elimination, phase lock, winner persistence), new game reset, double/redouble validation |
 
 #### App (fifty-six-app) — Vitest
 
@@ -218,23 +218,39 @@ All 33 user stories and ~90 test case issues are tracked on the [GitHub project 
 | US20 | Two-tap to play a card | ✅ Done |
 | US21 | See trick winning animation | 🔲 Backlog |
 | US22 | Request trick history with unanimous vote | ✅ Done |
-| US23 | Play timer with auto-play on expiry | 🔲 Backlog |
+| US23 | Play timer with auto-play on expiry | ✅ Done |
 | US24 | See round summary after each round | ✅ Done |
 | US25 | See tables as number and chip visual | ✅ Done |
 | US26 | See end game screen with stats | ✅ Done |
 | US27 | AI players follow bidding conventions | ✅ Done |
 | US28 | AI players have names and avatars | ✅ Done |
 | US29 | AI automatically takes over disconnected player | ✅ Done |
-| US30 | Host role migrates on host disconnection | 🔲 Backlog |
+| US30 | Host role migrates on host disconnection | ✅ Done |
 | US31 | In-game chat between players | ✅ Done |
 | US32 | Rematch without returning to lobby | ✅ Done |
 | US33 | Play offline against AI | ✅ Done |
 
-**26 of 33 user stories complete** (US18 partially done).
+**30 of 33 user stories complete** (US18 partially done).
 
 ---
 
 ## Recent Changes
+
+### 2026-04-19 — Play timer and host migration (US23, US30)
+
+**Features**
+- Play timer with auto-play (US23): countdown timer displayed during each player's turn in `PlayScreen`; auto-plays the lowest legal card when timer expires; configurable per room (15s, 30s, 45s, 60s); works in both online and offline modes
+- Host migration on disconnection (US30): when the host disconnects, host role immediately transfers to the next available player; new host receives notification; all players are notified of the role change via `HOST_MIGRATED` event; preserves game continuity
+
+**Configuration**
+- Room creation UI enhanced with play timer selector alongside bid timer
+- Play timer setting visible in waiting room settings badge
+- Server validates `playTimerSeconds` in room creation schema (10–120 s range, 30 s default)
+
+**Testing**
+- Server test suite: 186 → 192 tests (+6 for double/redouble validation)
+- New host migration logic integrated into `handleDisconnect()` in `GameRoom.ts`
+- Client-side listener added in `useSocket.ts` to handle `HOST_MIGRATED` event and update lobby store
 
 ### 2026-04-19 — End game flow fixes, rematch, and expanded test coverage
 
