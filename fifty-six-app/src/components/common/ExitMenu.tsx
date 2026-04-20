@@ -151,7 +151,7 @@ export function ExitMenu({
           {/* Loading State */}
           {isLoading && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
+              <ActivityIndicator size="large" color={Colors.accent} />
               <Text style={styles.loadingText}>Processing...</Text>
             </View>
           )}
@@ -219,18 +219,18 @@ export function ExitMenu({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: Colors.bgOverlay,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.large,
+    padding: Spacing.lg,
   },
   menuContainer: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.large,
+    backgroundColor: Colors.bgSurface,
+    borderRadius: Radius.xl,
     width: '100%',
     maxWidth: 400,
-    paddingTop: Spacing.large,
-    paddingBottom: Spacing.large,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.lg,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -241,39 +241,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.large,
-    marginBottom: Spacing.large,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
   title: {
-    fontSize: FontSize.large,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    color: Colors.text,
+    color: Colors.textPrimary,
   },
   closeButton: {
-    fontSize: FontSize.xlarge,
+    fontSize: FontSize.xl,
     color: Colors.textSecondary,
   },
   loadingContainer: {
-    paddingVertical: Spacing.xlarge,
+    paddingVertical: Spacing.xl,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: Spacing.medium,
-    fontSize: FontSize.medium,
+    marginTop: Spacing.md,
+    fontSize: FontSize.md,
     color: Colors.textSecondary,
   },
   optionsContainer: {
-    paddingHorizontal: Spacing.large,
-    marginBottom: Spacing.large,
-    gap: Spacing.medium,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.medium,
-    borderRadius: Radius.medium,
-    marginBottom: Spacing.small,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.sm,
   },
   optionWarning: {
     backgroundColor: 'rgba(255, 152, 0, 0.1)',
@@ -291,32 +291,32 @@ const styles = StyleSheet.create({
     borderLeftColor: Colors.primary,
   },
   optionIcon: {
-    fontSize: FontSize.xlarge,
-    marginRight: Spacing.medium,
+    fontSize: FontSize.xl,
+    marginRight: Spacing.md,
   },
   optionContent: {
     flex: 1,
   },
   optionTitle: {
-    fontSize: FontSize.medium,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
-    color: Colors.text,
-    marginBottom: Spacing.xsmall,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
   optionDescription: {
-    fontSize: FontSize.small,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
   },
   closeButtonFull: {
-    marginHorizontal: Spacing.large,
-    paddingVertical: Spacing.medium,
+    marginHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     backgroundColor: Colors.textSecondary,
-    borderRadius: Radius.medium,
+    borderRadius: Radius.md,
     alignItems: 'center',
   },
   closeButtonText: {
-    fontSize: FontSize.medium,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
-    color: Colors.surface,
+    color: Colors.bgSurface,
   },
 });
