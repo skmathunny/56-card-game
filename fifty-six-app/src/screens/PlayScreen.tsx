@@ -7,6 +7,8 @@ import {
   Modal,
   useWindowDimensions,
   ScrollView,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +19,7 @@ import { useTransport } from '../services/transportContext';
 import { useGameStore } from '../store/gameSlice';
 import { useUIStore } from '../store/uiSlice';
 import { useLobbyStore } from '../store/lobbySlice';
+import { leaveAndCleanup } from '../utils/leaveAndCleanup';
 import { CardView } from '../components/game/CardView';
 import { ChatPanel } from '../components/game/ChatPanel';
 import { TrickHistoryPanel } from '../components/game/TrickHistoryPanel';
@@ -44,18 +47,32 @@ function PlayTimer({ seconds }: TimerProps) {
 export default function PlayScreen() {
   const navigation = useNavigation<Nav>();
   const transport  = useTransport();
-  const { gameState, myHand, unreadChatCount } = useGameStore();
-  const { myPlayerId }                         = useLobbyStore();
+  const { gameState, myHand, unreadChatCount, clearGame } = useGameStore();
+  const { myPlayerId, roomId, clearLobby }                = useLobbyStore();
   const {
     selectedCardId, selectCard,
     isChatOpen, setChatOpen,
     isTrickHistoryOpen, setTrickHistoryOpen,
     trickHistoryVotePrompt, dismissTrickHistoryVote,
     isRoundSummaryVisible,
+    resetUI,
   } = useUIStore();
   const { width, height } = useWindowDimensions();
   const [teamPopup, setTeamPopup] = useState<'A' | 'B' | null>(null);
   const [timeLeft, setTimeLeft] = useState(30);
+
+  const handleLeave = () => {
+    const doLeave = () => leaveAndCleanup(transport, roomId, clearGame, clearLobby, resetUI, false)
+      .then(() => navigation.replace(ROUTES.HOME));
+    if (Platform.OS === 'web') {
+      if (window.confirm('Leave game? The AI will take over your seat.')) doLeave();
+    } else {
+      Alert.alert('Leave Game', 'The AI will take over your seat.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Leave', style: 'destructive', onPress: doLeave },
+      ]);
+    }
+  };
 
   const cardHeight  = Math.min(height * 0.22, 160);
   const cardWidth   = Math.round(cardHeight * (52 / 76));
@@ -153,6 +170,9 @@ export default function PlayScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Top bar */}
       <View style={styles.topBar}>
+        <TouchableOpacity onPress={handleLeave} style={styles.leaveBtn}>
+          <Text style={styles.leaveText}>Leave</Text>
+        </TouchableOpacity>
         <View style={styles.teams}>
           {(['A', 'B'] as const).map((team) => (
             <TouchableOpacity key={team} onPress={() => setTeamPopup(team)}
@@ -596,4 +616,7 @@ const styles = StyleSheet.create({
   voteBtnNo:  { backgroundColor: Colors.bgSurface },
   voteBtnYes: { backgroundColor: Colors.accent },
   voteBtnText: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.textPrimary },
+
+  leaveBtn: { paddingVertical: Spacing.xs, paddingRight: Spacing.sm },
+  leaveText: { fontSize: FontSize.sm, color: Colors.error },
 });

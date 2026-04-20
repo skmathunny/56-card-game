@@ -8,6 +8,8 @@ import {
   ScrollView,
   TouchableOpacity,
   LayoutChangeEvent,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +20,8 @@ import { Button } from '../components/common';
 import { useTransport } from '../services/transportContext';
 import { useGameStore } from '../store/gameSlice';
 import { useLobbyStore } from '../store/lobbySlice';
+import { useUIStore } from '../store/uiSlice';
+import { leaveAndCleanup } from '../utils/leaveAndCleanup';
 import { SUIT_SYMBOLS } from '../constants/cards';
 import { getCardImage, getDeckTheme } from '../decks/deckRegistry';
 import type { Suit } from '../constants/cards';
@@ -110,9 +114,23 @@ function BidTimer({ seconds }: TimerProps) {
 export default function DealAndBidScreen() {
   const navigation = useNavigation<Nav>();
   const transport  = useTransport();
-  const { gameState, myHand } = useGameStore();
-  const { myPlayerId, settings } = useLobbyStore();
+  const { gameState, myHand, clearGame } = useGameStore();
+  const { myPlayerId, settings, roomId, clearLobby } = useLobbyStore();
+  const { resetUI } = useUIStore();
   const deckId = settings?.deckId;
+
+  const handleLeave = () => {
+    const doLeave = () => leaveAndCleanup(transport, roomId, clearGame, clearLobby, resetUI, false)
+      .then(() => navigation.replace(ROUTES.HOME));
+    if (Platform.OS === 'web') {
+      if (window.confirm('Leave game? The AI will take over your seat.')) doLeave();
+    } else {
+      Alert.alert('Leave Game', 'The AI will take over your seat.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Leave', style: 'destructive', onPress: doLeave },
+      ]);
+    }
+  };
   const deckTheme = getDeckTheme(deckId);
 
   const [selectedAmount, setSelectedAmount] = useState(() => {
@@ -219,6 +237,11 @@ export default function DealAndBidScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.leaveBar}>
+        <TouchableOpacity onPress={handleLeave} style={styles.leaveBtn}>
+          <Text style={styles.leaveText}>Leave</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* ── Teams + avatars + timer ── */}
       <View style={styles.teamsPanel}>
@@ -541,4 +564,13 @@ const styles = StyleSheet.create({
 
   waitingWrap: { alignItems: 'center', padding: Spacing.lg },
   waitingText: { fontSize: FontSize.md, color: Colors.textSecondary, fontStyle: 'italic' },
+
+  leaveBar: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical:   Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.bgSurface,
+  },
+  leaveBtn: { alignSelf: 'flex-start' },
+  leaveText: { fontSize: FontSize.md, color: Colors.error },
 });
