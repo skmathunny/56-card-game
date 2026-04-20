@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   optionLogout: {
     backgroundColor: 'rgba(156, 39, 176, 0.1)',
     borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
+    borderLeftColor: Colors.accent,
   },
   optionIcon: {
     fontSize: FontSize.xl,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.bold,
     color: Colors.bgSurface,
   },
 });

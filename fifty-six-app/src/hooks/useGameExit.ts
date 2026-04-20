@@ -70,7 +70,7 @@ export function useGameExit() {
       // Navigate back to waiting room
       try {
         console.log('🔄 exitRound: Navigating to ' + ROUTES.WAITING_ROOM + '...');
-        navigation.replace(ROUTES.WAITING_ROOM as never);
+        navigation.replace(ROUTES.WAITING_ROOM);
         console.log('✅ exitRound: Navigation succeeded');
       } catch (navError) {
         const msg = navError instanceof Error ? navError.message : String(navError);
@@ -148,7 +148,7 @@ export function useGameExit() {
       // Navigate back to home
       try {
         console.log('🚪 exitGame: Navigating to ' + ROUTES.HOME + '...');
-        navigation.replace(ROUTES.HOME as never);
+        navigation.replace(ROUTES.HOME);
         console.log('✅ exitGame: Navigation succeeded');
       } catch (navError) {
         const msg = navError instanceof Error ? navError.message : String(navError);
@@ -241,7 +241,7 @@ export function useGameExit() {
       // Navigate to login
       try {
         console.log('🚪 logout: Navigating to ' + ROUTES.LOGIN + '...');
-        navigation.replace(ROUTES.LOGIN as never);
+        navigation.replace(ROUTES.LOGIN);
         console.log('✅ logout: Navigation succeeded');
       } catch (navError) {
         const msg = navError instanceof Error ? navError.message : String(navError);
