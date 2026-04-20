@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,6 +8,9 @@ import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
 import { useGameStore } from '../store/gameSlice';
 import { useUIStore } from '../store/uiSlice';
+import { useLobbyStore } from '../store/lobbySlice';
+import { useTransport } from '../services/transportContext';
+import { leaveAndCleanup } from '../utils/leaveAndCleanup';
 import { SUIT_SYMBOLS } from '../constants/cards';
 import type { Suit } from '../constants/cards';
 
@@ -17,9 +20,24 @@ const TEAM_COLORS = { A: Colors.teamA, B: Colors.teamB };
 
 export default function RoundSummaryScreen() {
   const navigation  = useNavigation<Nav>();
-  const { roundSummary, roundHistory, gameState, clearRoundSummary } = useGameStore();
-  const { setRoundSummaryVisible } = useUIStore();
+  const transport   = useTransport();
+  const { roundSummary, roundHistory, gameState, clearRoundSummary, clearGame } = useGameStore();
+  const { setRoundSummaryVisible, resetUI } = useUIStore();
+  const { roomId, clearLobby } = useLobbyStore();
   const [tricksExpanded, setTricksExpanded] = useState(false);
+
+  const handleLeave = () => {
+    const doLeave = () => leaveAndCleanup(transport, roomId, clearGame, clearLobby, resetUI, false)
+      .then(() => navigation.replace(ROUTES.HOME));
+    if (Platform.OS === 'web') {
+      if (window.confirm('Leave game? The AI will take over your seat.')) doLeave();
+    } else {
+      Alert.alert('Leave Game', 'The AI will take over your seat.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Leave', style: 'destructive', onPress: doLeave },
+      ]);
+    }
+  };
 
   const handleContinue = () => {
     clearRoundSummary();
@@ -45,6 +63,11 @@ export default function RoundSummaryScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.leaveBar}>
+        <TouchableOpacity onPress={handleLeave} style={styles.leaveBtn}>
+          <Text style={styles.leaveText}>Leave</Text>
+        </TouchableOpacity>
+      </View>
       <ScrollView contentContainerStyle={styles.container}>
         {/* Result banner */}
         <View style={[styles.resultBanner, roundSummary.success ? styles.successBanner : styles.failBanner]}>
@@ -372,4 +395,13 @@ const styles = StyleSheet.create({
   miniRank:       { fontSize: FontSize.xs, fontWeight: FontWeight.heavy, alignSelf: 'flex-start' },
   miniSuit:       { fontSize: FontSize.sm },
   miniPlayerName: { fontSize: FontSize.xs, color: Colors.textMuted, maxWidth: 48, textAlign: 'center' },
+
+  leaveBar: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical:   Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.bgSurface,
+  },
+  leaveBtn: { alignSelf: 'flex-start' },
+  leaveText: { fontSize: FontSize.md, color: Colors.error },
 });
