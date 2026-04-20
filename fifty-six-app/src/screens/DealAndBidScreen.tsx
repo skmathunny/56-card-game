@@ -157,6 +157,16 @@ export default function DealAndBidScreen() {
     return () => clearInterval(id);
   }, [currentBidderSeat, gameState?.phase]);
 
+  // Clamp selected bid amount to the current minimum — must be before early return
+  const baseBid      = gameState?.playerCount === 4 ? 14 : 28;
+  const highestBidAmount = gameState?.biddingState.bids
+    .filter(b => b.type === 'bid')
+    .reduce((max, b) => Math.max(max, b.amount ?? 0), 0) ?? 0;
+  const minBid = highestBidAmount > 0 ? highestBidAmount + 1 : baseBid;
+  useEffect(() => {
+    if (selectedAmount < minBid) setSelectedAmount(minBid);
+  }, [minBid]);
+
   if (!gameState) {
     return (
       <View style={styles.loading}>
@@ -169,18 +179,8 @@ export default function DealAndBidScreen() {
   const isMyTurn      = gameState.phase === 'bidding' && currentBidder?.id === myPlayerId;
 
   const BID_AMOUNTS  = buildBidAmounts(gameState.playerCount);
-  const baseBid      = gameState.playerCount === 4 ? 14 : 28;
   const highBid      = gameState.biddingState.currentHighBid;
-  // Find the highest bid amount in the bidding history
-  const highestBidAmount = gameState.biddingState.bids
-    .filter(b => b.type === 'bid')
-    .reduce((max, b) => Math.max(max, b.amount ?? 0), 0);
-  const minBid = highestBidAmount > 0 ? highestBidAmount + 1 : baseBid;
   const validAmounts = BID_AMOUNTS.filter((a) => a >= minBid);
-
-  useEffect(() => {
-    if (selectedAmount < minBid) setSelectedAmount(minBid);
-  }, [minBid]);
 
   // Build last-bid label per player
   const lastBidByPlayer: Record<string, string> = {};

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -78,13 +78,16 @@ export default function PlayScreen() {
     if (gameState?.phase === 'complete') navigation.replace(ROUTES.END_GAME);
   }, [gameState?.phase]);
 
-  // Close exit menu when exit operation completes
+  // Close exit menu after an exit operation finishes
+  const wasLoading = useRef(false);
   useEffect(() => {
-    if (!isLoading && showExitMenu) {
-      console.log('Exit operation complete, closing modal');
+    if (isLoading) {
+      wasLoading.current = true;
+    } else if (wasLoading.current) {
+      wasLoading.current = false;
       setShowExitMenu(false);
     }
-  }, [isLoading, showExitMenu]);
+  }, [isLoading]);
 
   // Check whose turn it is
   const isMyTurn =

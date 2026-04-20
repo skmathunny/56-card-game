@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../../constants/theme';
@@ -13,21 +12,20 @@ import { Colors, FontSize, FontWeight, Spacing, Radius } from '../../constants/t
 export interface ExitMenuProps {
   visible: boolean;
   onClose: () => void;
-  onExitRound?: () => Promise<void> | void;      // Leave current round, back to waiting room
-  onExitGame?: () => Promise<void> | void;       // Leave game entirely
-  onLogout: () => Promise<void> | void;          // Logout from app
-  canExitRound?: boolean;        // Show exit round option
-  canExitGame?: boolean;         // Show exit game option
-  isLoading?: boolean;           // Show loading indicator
+  onExitRound?: () => Promise<void> | void;
+  onExitGame?: () => Promise<void> | void;
+  onLogout: () => Promise<void> | void;
+  canExitRound?: boolean;
+  canExitGame?: boolean;
+  isLoading?: boolean;
 }
 
-/**
- * Exit Menu Component
- * Provides options to:
- * - Exit the current round
- * - Exit the game
- * - Logout from the app
- */
+const CONFIRM_CONFIG = {
+  round:  { label: 'Exit Round',  message: 'Leave this round and return to the waiting room?', danger: false },
+  game:   { label: 'Exit Game',   message: 'Leave this game and return to the home screen?',   danger: true  },
+  logout: { label: 'Logout',      message: 'You will be logged out of the app.',               danger: true  },
+} as const;
+
 export function ExitMenu({
   visible,
   onClose,
@@ -40,130 +38,75 @@ export function ExitMenu({
 }: ExitMenuProps) {
   const [confirming, setConfirming] = useState<'round' | 'game' | 'logout' | null>(null);
 
-  const handleExitRound = () => {
-    console.log('🎯 Menu: Exit Round tapped, showing confirmation...');
-    setConfirming('round');
-    Alert.alert('Exit Round?', 'You will leave this round and return to the waiting room.', [
-      { text: 'Cancel', onPress: () => {
-        console.log('🎯 Menu: Exit Round cancelled');
-        setConfirming(null);
-      }},
-      {
-        text: 'Exit Round',
-        onPress: async () => {
-          console.log('🎯 Menu: Exit Round confirmed, calling handler...');
-          setConfirming(null);
-          try {
-            const result = onExitRound?.();
-            if (result && typeof result.then === 'function') {
-              console.log('🎯 Menu: Awaiting async handler...');
-              await result;
-              console.log('🎯 Menu: Handler completed');
-            } else {
-              console.log('🎯 Menu: Handler is sync');
-            }
-          } catch (error) {
-            console.error('🎯 Menu: Handler error:', error);
-            Alert.alert('Error', 'An error occurred: ' + (error instanceof Error ? error.message : String(error)));
-          }
-        },
-        style: 'destructive',
-      },
-    ]);
+  const handleConfirm = async () => {
+    const action = confirming;
+    setConfirming(null);
+    if (action === 'round')  await onExitRound?.();
+    if (action === 'game')   await onExitGame?.();
+    if (action === 'logout') await onLogout();
   };
 
-  const handleExitGame = () => {
-    console.log('🎯 Menu: Exit Game tapped, showing confirmation...');
-    setConfirming('game');
-    Alert.alert('Exit Game?', 'You will leave this game and return to the home screen.', [
-      { text: 'Cancel', onPress: () => {
-        console.log('🎯 Menu: Exit Game cancelled');
-        setConfirming(null);
-      }},
-      {
-        text: 'Exit Game',
-        onPress: async () => {
-          console.log('🎯 Menu: Exit Game confirmed, calling handler...');
-          setConfirming(null);
-          try {
-            const result = onExitGame?.();
-            if (result && typeof result.then === 'function') {
-              console.log('🎯 Menu: Awaiting async handler...');
-              await result;
-              console.log('🎯 Menu: Handler completed');
-            } else {
-              console.log('🎯 Menu: Handler is sync');
-            }
-          } catch (error) {
-            console.error('🎯 Menu: Handler error:', error);
-            Alert.alert('Error', 'An error occurred: ' + (error instanceof Error ? error.message : String(error)));
-          }
-        },
-        style: 'destructive',
-      },
-    ]);
+  const handleClose = () => {
+    if (!isLoading) {
+      setConfirming(null);
+      onClose();
+    }
   };
 
-  const handleLogout = () => {
-    console.log('🎯 Menu: Logout tapped, showing confirmation...');
-    setConfirming('logout');
-    Alert.alert('Logout?', 'You will be logged out from the app.', [
-      { text: 'Cancel', onPress: () => {
-        console.log('🎯 Menu: Logout cancelled');
-        setConfirming(null);
-      }},
-      {
-        text: 'Logout',
-        onPress: async () => {
-          console.log('🎯 Menu: Logout confirmed, calling handler...');
-          setConfirming(null);
-          try {
-            const result = onLogout();
-            if (result && typeof result.then === 'function') {
-              console.log('🎯 Menu: Awaiting async handler...');
-              await result;
-              console.log('🎯 Menu: Handler completed');
-            } else {
-              console.log('🎯 Menu: Handler is sync');
-            }
-          } catch (error) {
-            console.error('🎯 Menu: Handler error:', error);
-            Alert.alert('Error', 'An error occurred: ' + (error instanceof Error ? error.message : String(error)));
-          }
-        },
-        style: 'destructive',
-      },
-    ]);
-  };
+  const cfg = confirming ? CONFIRM_CONFIG[confirming] : null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.overlay}>
         <View style={styles.menuContainer}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Menu</Text>
-            <TouchableOpacity onPress={onClose} disabled={isLoading}>
-              <Text style={styles.closeButton}>✕</Text>
-            </TouchableOpacity>
+            <Text style={styles.title}>{confirming ? 'Confirm' : 'Menu'}</Text>
+            {!isLoading && (
+              <TouchableOpacity onPress={handleClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.closeButton}>✕</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* Loading State */}
+          {/* Loading */}
           {isLoading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={Colors.accent} />
-              <Text style={styles.loadingText}>Processing...</Text>
+              <Text style={styles.loadingText}>Processing…</Text>
             </View>
           )}
 
-          {/* Menu Options */}
-          {!isLoading && (
+          {/* Confirmation panel */}
+          {!isLoading && confirming && cfg && (
+            <View style={styles.confirmContainer}>
+              <Text style={styles.confirmMessage}>{cfg.message}</Text>
+              <View style={styles.confirmButtons}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setConfirming(null)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.backButtonText}>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.confirmButton, cfg.danger ? styles.confirmDanger : styles.confirmWarning]}
+                  onPress={handleConfirm}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.confirmButtonText}>{cfg.label}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Menu options */}
+          {!isLoading && !confirming && (
             <View style={styles.optionsContainer}>
-              {/* Exit Round Option */}
               {canExitRound && onExitRound && (
                 <TouchableOpacity
                   style={[styles.option, styles.optionWarning]}
-                  onPress={handleExitRound}
+                  onPress={() => setConfirming('round')}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.optionIcon}>↩️</Text>
@@ -174,11 +117,10 @@ export function ExitMenu({
                 </TouchableOpacity>
               )}
 
-              {/* Exit Game Option */}
               {canExitGame && onExitGame && (
                 <TouchableOpacity
                   style={[styles.option, styles.optionDanger]}
-                  onPress={handleExitGame}
+                  onPress={() => setConfirming('game')}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.optionIcon}>🚪</Text>
@@ -189,13 +131,12 @@ export function ExitMenu({
                 </TouchableOpacity>
               )}
 
-              {/* Logout Option */}
               <TouchableOpacity
                 style={[styles.option, styles.optionLogout]}
-                onPress={handleLogout}
+                onPress={() => setConfirming('logout')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.optionIcon}>🚪</Text>
+                <Text style={styles.optionIcon}>🔓</Text>
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>Logout</Text>
                   <Text style={styles.optionDescription}>Exit the app</Text>
@@ -204,9 +145,9 @@ export function ExitMenu({
             </View>
           )}
 
-          {/* Close Button */}
-          {!isLoading && (
-            <TouchableOpacity style={styles.closeButtonFull} onPress={onClose}>
+          {/* Cancel button (menu list only) */}
+          {!isLoading && !confirming && (
+            <TouchableOpacity style={styles.closeButtonFull} onPress={handleClose} activeOpacity={0.7}>
               <Text style={styles.closeButtonText}>Cancel</Text>
             </TouchableOpacity>
           )}
@@ -253,6 +194,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xl,
     color: Colors.textSecondary,
   },
+
   loadingContainer: {
     paddingVertical: Spacing.xl,
     justifyContent: 'center',
@@ -263,6 +205,48 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textSecondary,
   },
+
+  confirmContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    gap: Spacing.lg,
+  },
+  confirmMessage: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  backButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+  },
+  backButtonText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold,
+    color: Colors.textSecondary,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+  },
+  confirmWarning: { backgroundColor: Colors.warning },
+  confirmDanger:  { backgroundColor: Colors.error   },
+  confirmButtonText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold,
+    color: '#fff',
+  },
+
   optionsContainer: {
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
@@ -273,7 +257,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.md,
     borderRadius: Radius.md,
-    marginBottom: Spacing.sm,
   },
   optionWarning: {
     backgroundColor: 'rgba(255, 152, 0, 0.1)',
@@ -294,9 +277,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xl,
     marginRight: Spacing.md,
   },
-  optionContent: {
-    flex: 1,
-  },
+  optionContent: { flex: 1 },
   optionTitle: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
@@ -307,16 +288,17 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
   },
+
   closeButtonFull: {
     marginHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: Colors.bgCard,
     borderRadius: Radius.md,
     alignItems: 'center',
   },
   closeButtonText: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
-    color: Colors.bgSurface,
+    color: Colors.textSecondary,
   },
 });

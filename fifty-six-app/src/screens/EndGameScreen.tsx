@@ -22,6 +22,8 @@ export default function EndGameScreen() {
   const { gameState, roundHistory, clearGame } = useGameStore();
   const { roomId, players, myPlayerId, clearLobby } = useLobbyStore();
   const { logout, isLoading } = useGameExit();
+  const [showHistory, setShowHistory] = useState(false);
+  const [showExitMenu, setShowExitMenu] = useState(false);
 
   if (!gameState) {
     return (
@@ -33,8 +35,6 @@ export default function EndGameScreen() {
 
   const winner = gameState.winner;
   const loser  = winner === 'A' ? 'B' : 'A';
-  const [showHistory, setShowHistory] = useState(false);
-  const [showExitMenu, setShowExitMenu] = useState(false);
   const lastRound = roundHistory.length > 0 ? roundHistory[roundHistory.length - 1] : null;
 
   const handleRematch = () => {

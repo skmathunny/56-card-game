@@ -52,7 +52,7 @@ export default function RoundSummaryScreen() {
       {/* Header with menu button */}
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
         <TouchableOpacity onPress={() => setShowExitMenu(true)} style={{ padding: Spacing.sm }}>
-          <Text style={{ fontSize: FontSize.large }}>⚙️</Text>
+          <Text style={{ fontSize: FontSize.xl }}>⚙️</Text>
         </TouchableOpacity>
       </View>
       
