@@ -34,6 +34,8 @@ export function useBackgroundMusic() {
   const currentSectionRef = useRef<MusicSection>(null);
   const isInitializedRef = useRef(false);
   const currentRouteRef = useRef<string>('');
+  const userInteractedRef = useRef(false);
+  const pendingSectionRef = useRef<MusicSection>(null);
 
   // Determine which section a route belongs to
   const getSection = (routeName: string): MusicSection => {
@@ -100,7 +102,17 @@ export function useBackgroundMusic() {
     try {
       const { masterVolume } = useMusicStore.getState();
       await sound.setVolumeAsync(0);
-      await sound.playAsync();
+      
+      try {
+        await sound.playAsync();
+      } catch (playError: any) {
+        // Handle NotAllowedError - user interaction not yet occurred
+        if (playError?.name === 'NotAllowedError' || playError?.message?.includes('play() failed')) {
+          console.log('⏸️  Deferring music playback until user interaction...');
+          return; // Will retry after user interaction
+        }
+        throw playError;
+      }
 
       const steps = 10;
       const interval = duration / steps;
@@ -123,6 +135,12 @@ export function useBackgroundMusic() {
     
     if (newSection === currentSectionRef.current) return; // Already playing this section
 
+    // If user hasn't interacted yet, save for later
+    if (!userInteractedRef.current) {
+      pendingSectionRef.current = newSection;
+      return;
+    }
+
     // Fade out current music
     if (currentSectionRef.current) {
       const currentSound = soundRefs.current[currentSectionRef.current];
@@ -140,11 +158,45 @@ export function useBackgroundMusic() {
     currentSectionRef.current = newSection;
   };
 
+  // Handle first user interaction to trigger deferred music
+  const handleUserInteraction = async () => {
+    if (userInteractedRef.current) return; // Already interacted
+    
+    userInteractedRef.current = true;
+    console.log('✓ User interaction detected, starting music...');
+
+    // If there's a pending section, start music for it
+    if (pendingSectionRef.current) {
+      const { musicEnabled } = useMusicStore.getState();
+      if (musicEnabled) {
+        const sound = soundRefs.current[pendingSectionRef.current];
+        if (sound) {
+          await fadeIn(sound, 300);
+          currentSectionRef.current = pendingSectionRef.current;
+        }
+      }
+      pendingSectionRef.current = null;
+    }
+  };
+
   // Initialize on mount and setup navigation listener
   useEffect(() => {
     if (!isInitializedRef.current) {
       initializeAudio();
     }
+
+    // Setup user interaction listeners for browser (handles initial autoplay policy)
+    const handleInteraction = () => {
+      handleUserInteraction();
+      // Remove listeners after first interaction
+      document.removeEventListener('touchstart', handleInteraction);
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('keydown', handleInteraction);
+    };
+
+    document.addEventListener('touchstart', handleInteraction);
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('keydown', handleInteraction);
 
     // Listen for navigation changes
     const unsubscribe = navigation.addListener('state', () => {
@@ -162,7 +214,12 @@ export function useBackgroundMusic() {
       }
     });
 
-    return () => unsubscribe?.();
+    return () => {
+      unsubscribe?.();
+      document.removeEventListener('touchstart', handleInteraction);
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('keydown', handleInteraction);
+    };
   }, [navigation]);
 
   // Cleanup on unmount
