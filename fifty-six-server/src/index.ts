@@ -42,6 +42,10 @@ app.post('/rooms', (req, res) => {
   const parsed = CreateRoomSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
+  if (roomManager.isFull()) {
+    return res.status(429).json({ error: 'SERVER_ROOM_LIMIT', message: 'The server has reached its maximum of 5 simultaneous game rooms. Please try again later.' });
+  }
+
   const room = roomManager.createRoom(parsed.data);
   return res.status(201).json({ roomId: room.id, code: room.code, settings: room.settings });
 });

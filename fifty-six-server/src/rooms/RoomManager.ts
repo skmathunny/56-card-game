@@ -7,6 +7,8 @@ function generateRoomCode(): string {
   return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
+const MAX_ROOMS = 5;
+
 export class RoomManager {
   private rooms = new Map<string, GameRoom>();
   private codeToId = new Map<string, string>();
@@ -14,6 +16,14 @@ export class RoomManager {
 
   constructor(io: Server) {
     this.io = io;
+  }
+
+  get roomCount(): number {
+    return this.rooms.size;
+  }
+
+  isFull(): boolean {
+    return this.rooms.size >= MAX_ROOMS;
   }
 
   createRoom(settings: RoomSettings): GameRoom {

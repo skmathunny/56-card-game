@@ -39,10 +39,12 @@ export default function CreateRoomScreen() {
   const [deckId, setDeckId]             = useState(DEFAULT_DECK_ID);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
+  const [roomLimitReached, setRoomLimitReached] = useState(false);
 
   const handleCreate = async () => {
     setLoading(true);
     setError('');
+    setRoomLimitReached(false);
     try {
       const name   = (await AsyncStorage.getItem('profile_name'))   ?? 'Player';
       const avatar = (await AsyncStorage.getItem('profile_avatar')) ?? '🦁';
@@ -59,7 +61,14 @@ export default function CreateRoomScreen() {
           expiryHours:     4,
         }),
       });
-      if (!createRes.ok) throw new Error('Failed to create room');
+      if (!createRes.ok) {
+        const body = await createRes.json().catch(() => ({}));
+        if (createRes.status === 429 || body.error === 'SERVER_ROOM_LIMIT') {
+          setRoomLimitReached(true);
+          return;
+        }
+        throw new Error(body.message ?? 'Failed to create room');
+      }
       const { code } = await createRes.json();
 
       const { room, yourPlayer } = await transport.joinRoom({
@@ -187,6 +196,17 @@ export default function CreateRoomScreen() {
           </View>
         </View>
 
+        {roomLimitReached && (
+          <View style={styles.limitBanner}>
+            <Text style={styles.limitBannerIcon}>⚠️</Text>
+            <View style={styles.limitBannerText}>
+              <Text style={styles.limitBannerTitle}>Server at capacity</Text>
+              <Text style={styles.limitBannerSub}>
+                The server has reached its limit of 5 simultaneous game rooms. Please try again in a few minutes.
+              </Text>
+            </View>
+          </View>
+        )}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <Button
@@ -261,4 +281,19 @@ const styles = StyleSheet.create({
   timerTextActive:{ color: Colors.accent, fontWeight: FontWeight.bold },
 
   errorText: { fontSize: FontSize.sm, color: Colors.error, textAlign: 'center' },
+
+  limitBanner: {
+    flexDirection:   'row',
+    alignItems:      'flex-start',
+    backgroundColor: Colors.warning + '22',
+    borderWidth:     1,
+    borderColor:     Colors.warning + '66',
+    borderRadius:    Radius.lg,
+    padding:         Spacing.md,
+    gap:             Spacing.sm,
+  },
+  limitBannerIcon:  { fontSize: FontSize.xl },
+  limitBannerText:  { flex: 1, gap: 4 },
+  limitBannerTitle: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.warning },
+  limitBannerSub:   { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: 18 },
 });
