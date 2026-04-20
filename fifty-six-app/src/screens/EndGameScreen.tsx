@@ -6,9 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../constants/theme';
 import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
-import { ExitMenu } from '../components/common/ExitMenu';
 import { useGameStore } from '../store/gameSlice';
-import { useGameExit } from '../hooks/useGameExit';
 import { useLobbyStore } from '../store/lobbySlice';
 import { useTransport } from '../services/transportContext';
 
@@ -21,9 +19,7 @@ export default function EndGameScreen() {
   const transport    = useTransport();
   const { gameState, roundHistory, clearGame } = useGameStore();
   const { roomId, players, myPlayerId, clearLobby } = useLobbyStore();
-  const { logout, isLoading } = useGameExit();
   const [showHistory, setShowHistory] = useState(false);
-  const [showExitMenu, setShowExitMenu] = useState(false);
 
   if (!gameState) {
     return (
@@ -51,13 +47,6 @@ export default function EndGameScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header with menu button */}
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
-        <TouchableOpacity onPress={() => setShowExitMenu(true)} style={{ padding: Spacing.sm }}>
-          <Text style={{ fontSize: FontSize.large }}>⚙️</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Winner banner */}
         <View style={[styles.winnerBanner, { borderColor: winner ? TEAM_COLORS[winner] + '88' : Colors.accent }]}>
@@ -173,15 +162,6 @@ export default function EndGameScreen() {
         </View>
       </ScrollView>
 
-      {/* Exit menu */}
-      <ExitMenu
-        visible={showExitMenu}
-        isLoading={isLoading}
-        canExitRound={false}
-        canExitGame={false}
-        onLogout={logout}
-        onClose={() => setShowExitMenu(false)}
-      />
     </SafeAreaView>
   );
 }

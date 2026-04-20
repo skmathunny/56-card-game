@@ -21,33 +21,6 @@ export function useGameExit() {
   const { resetUI } = useUIStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Leave mid-round → AI takes over seat → room selection (Home)
-  const exitRound = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await leaveAndCleanup(transport, roomId, clearGame, clearLobby, resetUI, false);
-      navigation.replace(ROUTES.HOME);
-    } catch (e) {
-      Alert.alert('Error', 'Failed to exit round: ' + (e instanceof Error ? e.message : String(e)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [roomId, transport, clearGame, clearLobby, resetUI, navigation]);
-
-  // Leave game entirely → AI takes over seat → Home
-  const exitGame = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await leaveAndCleanup(transport, roomId, clearGame, clearLobby, resetUI, false);
-      navigation.replace(ROUTES.HOME);
-    } catch (e) {
-      Alert.alert('Error', 'Failed to exit game: ' + (e instanceof Error ? e.message : String(e)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [roomId, transport, clearGame, clearLobby, resetUI, navigation]);
-
-  // Clear session → disconnect socket → Login
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -60,5 +33,5 @@ export function useGameExit() {
     }
   }, [roomId, transport, clearGame, clearLobby, resetUI, navigation]);
 
-  return { isLoading, exitRound, exitGame, logout };
+  return { isLoading, logout };
 }

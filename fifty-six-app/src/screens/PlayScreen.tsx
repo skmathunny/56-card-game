@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,9 @@ import { useTransport } from '../services/transportContext';
 import { useGameStore } from '../store/gameSlice';
 import { useUIStore } from '../store/uiSlice';
 import { useLobbyStore } from '../store/lobbySlice';
-import { useGameExit } from '../hooks/useGameExit';
 import { CardView } from '../components/game/CardView';
 import { ChatPanel } from '../components/game/ChatPanel';
 import { TrickHistoryPanel } from '../components/game/TrickHistoryPanel';
-import { ExitMenu } from '../components/common/ExitMenu';
 import { SUIT_SYMBOLS } from '../constants/cards';
 import type { Suit } from '../constants/cards';
 import type { Card } from '../constants/cards';
@@ -56,9 +54,7 @@ export default function PlayScreen() {
     isRoundSummaryVisible,
   } = useUIStore();
   const { width, height } = useWindowDimensions();
-  const { exitRound, exitGame, logout, isLoading } = useGameExit();
   const [teamPopup, setTeamPopup] = useState<'A' | 'B' | null>(null);
-  const [showExitMenu, setShowExitMenu] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
 
   const cardHeight  = Math.min(height * 0.22, 160);
@@ -77,17 +73,6 @@ export default function PlayScreen() {
   useEffect(() => {
     if (gameState?.phase === 'complete') navigation.replace(ROUTES.END_GAME);
   }, [gameState?.phase]);
-
-  // Close exit menu after an exit operation finishes
-  const wasLoading = useRef(false);
-  useEffect(() => {
-    if (isLoading) {
-      wasLoading.current = true;
-    } else if (wasLoading.current) {
-      wasLoading.current = false;
-      setShowExitMenu(false);
-    }
-  }, [isLoading]);
 
   // Check whose turn it is
   const isMyTurn =
@@ -215,9 +200,6 @@ export default function PlayScreen() {
                 <Text style={styles.badgeText}>{unreadChatCount}</Text>
               </View>
             )}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowExitMenu(true)} style={styles.iconBtn}>
-            <Text style={styles.iconBtnText}>⚙️</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -395,17 +377,6 @@ export default function PlayScreen() {
         </View>
       </Modal>
 
-      {/* Exit menu */}
-      <ExitMenu
-        visible={showExitMenu}
-        isLoading={isLoading}
-        canExitRound={true}
-        canExitGame={true}
-        onExitRound={exitRound}
-        onExitGame={exitGame}
-        onLogout={logout}
-        onClose={() => setShowExitMenu(false)}
-      />
     </SafeAreaView>
   );
 }

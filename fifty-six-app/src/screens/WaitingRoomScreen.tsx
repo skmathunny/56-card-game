@@ -15,9 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '../constants/theme';
 import { ROUTES } from '../navigation/routes';
 import { Button } from '../components/common';
-import { ExitMenu } from '../components/common/ExitMenu';
 import { useTransport } from '../services/transportContext';
-import { useGameExit } from '../hooks/useGameExit';
 import { useLobbyStore, RoomPlayer } from '../store/lobbySlice';
 import { useGameStore } from '../store/gameSlice';
 import { SERVER_EVENTS } from '../constants/events';
@@ -31,10 +29,7 @@ export default function WaitingRoomScreen() {
   const transport   = useTransport();
   const { roomCode, roomId, settings, players, myPlayerId, isHost, setPlayers } = useLobbyStore();
   const { gameState } = useGameStore();
-  const { exitGame, logout, isLoading } = useGameExit();
-
   const [starting, setStarting] = useState(false);
-  const [showExitMenu, setShowExitMenu] = useState(false);
 
   // Auto-navigate all players (not just the host) when the game starts
   useEffect(() => {
@@ -111,14 +106,9 @@ export default function WaitingRoomScreen() {
           <Text style={styles.leaveText}>Leave</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Waiting Room</Text>
-        <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-          <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
-            <Text style={styles.shareIcon}>⎋</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowExitMenu(true)} style={styles.shareBtn}>
-            <Text style={styles.shareIcon}>⚙️</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
+          <Text style={styles.shareIcon}>⎋</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -225,16 +215,6 @@ export default function WaitingRoomScreen() {
         </View>
       )}
 
-      {/* Exit menu */}
-      <ExitMenu
-        visible={showExitMenu}
-        isLoading={isLoading}
-        canExitRound={false}
-        canExitGame={true}
-        onExitGame={exitGame}
-        onLogout={logout}
-        onClose={() => setShowExitMenu(false)}
-      />
     </SafeAreaView>
   );
 }
