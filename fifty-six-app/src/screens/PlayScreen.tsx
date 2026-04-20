@@ -78,6 +78,14 @@ export default function PlayScreen() {
     if (gameState?.phase === 'complete') navigation.replace(ROUTES.END_GAME);
   }, [gameState?.phase]);
 
+  // Close exit menu when exit operation completes
+  useEffect(() => {
+    if (!isLoading && showExitMenu) {
+      console.log('Exit operation complete, closing modal');
+      setShowExitMenu(false);
+    }
+  }, [isLoading, showExitMenu]);
+
   // Check whose turn it is
   const isMyTurn =
     gameState?.phase === 'playing' &&
